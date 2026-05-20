@@ -135,6 +135,9 @@ export default function SampleRequestModal({ product, onClose }: Props) {
                 src={resolveMediaUrl(product.image_url)}
                 alt=""
                 className="w-full h-full object-cover"
+                width={800}
+                height={800}
+                loading="lazy"
               />
             </div>
             <p className="text-sm text-stone-600 leading-relaxed pt-1">

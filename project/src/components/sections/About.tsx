@@ -1,6 +1,7 @@
 import { resolveMediaUrl } from '../../lib/api';
 import { Sparkles, Lightbulb, Rocket, Leaf, ShieldCheck, Globe2, HandHeart } from 'lucide-react';
 import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { IMG } from '../../lib/imageSizes';
 
 const mainContentHeaderColor = '#4A352F';
 const mainContentIconBg = '#F3EDDC';
@@ -74,6 +75,9 @@ export default function About() {
               src={resolveMediaUrl(String(aboutContent.image_left || aboutFallback.image_left))}
               alt="Cottonunique organic cotton tote bags with GOTS certification"
               className="w-full h-72 md:h-80 object-contain object-center -ml-4 lg:-ml-6"
+              width={IMG.about.width}
+              height={IMG.about.height}
+              loading="lazy"
             />
           </div>
 
@@ -83,6 +87,9 @@ export default function About() {
               src={resolveMediaUrl(String(aboutContent.image_right || aboutFallback.image_right))}
               alt="Cottonunique sustainable tote bags and certifications"
               className="w-full h-80 md:h-96 object-cover object-center scale-95 -mt-8 lg:-mt-14"
+              width={IMG.about.width}
+              height={IMG.about.height}
+              loading="lazy"
             />
             <div>
               {/* Modern Elegance */}

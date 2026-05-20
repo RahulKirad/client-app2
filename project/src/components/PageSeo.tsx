@@ -6,7 +6,9 @@ export interface PageSeoProps {
   title: string;
   description: string;
   keywords?: string;
-  jsonLd?: Record<string, unknown>;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** LCP image URL(s) to preload (e.g. hero banner). */
+  linkPreload?: string | string[];
   ogType?: 'website' | 'product' | 'article';
   ogImage?: string;
   ogTitle?: string;
@@ -18,6 +20,7 @@ export default function PageSeo({
   description,
   keywords,
   jsonLd,
+  linkPreload,
   ogType = 'website',
   ogImage,
   ogTitle,
@@ -30,6 +33,12 @@ export default function PageSeo({
     : absoluteUrl(DEFAULT_OG_IMAGE);
   const resolvedOgTitle = ogTitle || title;
   const resolvedOgDescription = ogDescription || description;
+  const jsonLdItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+  const preloadHrefs = linkPreload
+    ? Array.isArray(linkPreload)
+      ? linkPreload
+      : [linkPreload]
+    : [];
 
   return (
     <Helmet>
@@ -37,6 +46,9 @@ export default function PageSeo({
       <meta name="description" content={description} />
       {keywords ? <meta name="keywords" content={keywords} /> : null}
       <link rel="canonical" href={canonical} />
+      {preloadHrefs.map((href) => (
+        <link key={href} rel="preload" as="image" href={href} />
+      ))}
       <meta property="og:title" content={resolvedOgTitle} />
       <meta property="og:description" content={resolvedOgDescription} />
       <meta property="og:image" content={resolvedOgImage} />
@@ -47,9 +59,11 @@ export default function PageSeo({
       <meta name="twitter:title" content={resolvedOgTitle} />
       <meta name="twitter:description" content={resolvedOgDescription} />
       <meta name="twitter:image" content={resolvedOgImage} />
-      {jsonLd ? (
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      ) : null}
+      {jsonLdItems.map((schema, index) => (
+        <script key={`jsonld-${index}`} type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      ))}
     </Helmet>
   );
 }

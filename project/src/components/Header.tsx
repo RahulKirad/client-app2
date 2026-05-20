@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingBag } from 'lucide-react';
+import { IMG } from '../lib/imageSizes';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -90,6 +91,9 @@ export default function Header() {
               src="/images/logo/logo.png"
               alt="Cottonunique - Premium sustainable tote bags"
               className="h-12 sm:h-14 md:h-20 w-auto max-h-20 transform group-hover:scale-110 transition-transform duration-300"
+              width={IMG.logo.width}
+              height={IMG.logo.height}
+              loading="lazy"
             />
           </div>
 

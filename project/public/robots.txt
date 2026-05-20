@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /dashboard
+Disallow: /login
+Disallow: /api
 
-Sitemap: https://cottoniq.netlify.app/sitemap.xml
+Sitemap: https://cottonunique.com/sitemap.xml

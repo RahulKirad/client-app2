@@ -2,6 +2,7 @@ import { CheckCircle, ShoppingBag, Package, Leaf } from 'lucide-react';
 import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
 import { resolveMediaUrl } from '../../lib/api';
 import { ecototeDuopackDefaults, mergeEcototeContent } from '../../data/ecototeDuopackDefaults';
+import { IMG } from '../../lib/imageSizes';
 
 export default function EcoToteDuoPack() {
   const { content: sectionContent } = useManagedSectionContent(
@@ -23,6 +24,9 @@ export default function EcoToteDuoPack() {
                   src={resolveMediaUrl(String(c.image || ecototeDuopackDefaults.image))}
                   alt="EcoTote DuoPack - Sustainable Garment Packaging"
                   className="mx-auto block h-auto max-h-[min(64dvh,32rem)] w-auto max-w-full object-contain sm:max-h-[min(68dvh,36rem)] md:max-h-[min(74dvh,40rem)] lg:max-h-[min(78dvh,44rem)]"
+                  width={IMG.product.width}
+                  height={IMG.product.height}
+                  loading="lazy"
                   style={{
                     clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)',
                   }}

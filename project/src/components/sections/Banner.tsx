@@ -1,4 +1,5 @@
 import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { IMG } from '../../lib/imageSizes';
 import { resolveMediaUrl } from '../../lib/api';
 import InternalAppLink from '../InternalAppLink';
 
@@ -57,6 +58,9 @@ export default function Banner({ bannerKey, fallback, className = '', showCTA = 
         src={resolveMediaUrl(String(bannerData.image || fallback.image))}
         alt={String(bannerData.title || fallback.title)}
         className="w-full h-full object-cover"
+        width={IMG.banner.width}
+        height={IMG.banner.height}
+        loading="lazy"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
       <div className="absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8 text-white">

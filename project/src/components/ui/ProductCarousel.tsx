@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import { Product, resolveMediaUrl } from '../../lib/api';
+import { IMG } from '../../lib/imageSizes';
 import { productPath } from '../../lib/seo';
 import { htmlToPlainText } from '../../lib/productDescriptionHtml';
 
@@ -153,6 +154,9 @@ export default function ProductCarousel({ products, onRequestSample }: ProductCa
                       src={resolveMediaUrl(product.image_url)}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      width={IMG.product.width}
+                      height={IMG.product.height}
+                      loading="lazy"
                     />
                   </div>
 

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, ShoppingBag, Filter, Grid, List, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { apiClient, Product, normalizeProducts, resolveMediaUrl } from '../lib/api';
 import PageSeo from '../components/PageSeo';
+import { IMG } from '../lib/imageSizes';
 import { buildTitle, productPath, truncateMeta } from '../lib/seo';
 import { goToHomeContactSection } from '../lib/scrollToContact';
 import { htmlToPlainText } from '../lib/productDescriptionHtml';
@@ -452,6 +453,9 @@ function ProductCard({ product, onRequestSample }: { product: Product; onRequest
           src={resolveMediaUrl(product.image_url)}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          width={IMG.product.width}
+          height={IMG.product.height}
+          loading="lazy"
         />
       </div>
 

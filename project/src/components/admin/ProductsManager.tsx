@@ -593,6 +593,9 @@ export default function ProductsManager() {
                     src={resolveMediaUrl(product.image_url)}
                     alt={product.name}
                     className="w-full h-full object-cover"
+                    width={800}
+                    height={800}
+                    loading="lazy"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
@@ -1093,6 +1096,9 @@ export default function ProductsManager() {
                             src={resolveMediaUrl(url)}
                             alt={`Current ${i + 1}`}
                             className="w-full h-full object-cover"
+                            width={96}
+                            height={96}
+                            loading="lazy"
                           />
                           <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center py-0.5">
                             {i + 1}
@@ -1113,6 +1119,9 @@ export default function ProductsManager() {
                             src={URL.createObjectURL(file)}
                             alt={`Preview ${i + 1}`}
                             className="w-full h-full object-cover"
+                            width={96}
+                            height={96}
+                            loading="lazy"
                           />
                           <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center py-0.5">
                             Photo {i + 1}

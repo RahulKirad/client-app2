@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Mail, Phone } from 'lucide-react';
 import { useManagedSectionContent } from '../hooks/useManagedSectionContent';
+import { IMG } from '../lib/imageSizes';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -27,6 +28,9 @@ export default function Footer() {
                 src="/images/logo/logo.png"
                 alt="Cottonunique Logo"
                 className="h-14 w-auto bg-white rounded-none p-1.5 border-2 border-white transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
+                width={IMG.logo.width}
+                height={IMG.logo.height}
+                loading="lazy"
               />
             </div>
             <p className="text-white/90 text-sm leading-relaxed font-medium" style={{fontFamily: 'var(--heading-font)'}}>

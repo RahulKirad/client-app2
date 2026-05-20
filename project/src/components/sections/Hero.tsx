@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ImgHTMLAttributes } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
 import { resolveMediaUrl } from '../../lib/api';
+import { IMG } from '../../lib/imageSizes';
 
 const heroContentFallback = {
   headline: 'Where intelligent design meets ethical craftsmanship',
@@ -121,9 +122,14 @@ export default function Hero() {
                 src={resolveMediaUrl(slide.image, heroVersion || slide.image)}
                 alt={`${slide.title} - ${slide.subtitle}. ${slide.description}`}
                 className="pointer-events-none absolute inset-0 z-0 block h-full w-full min-h-full min-w-full max-w-none object-cover object-[center_42%] sm:object-[center_40%] md:object-[center_38%] lg:object-center"
+                width={IMG.hero.width}
+                height={IMG.hero.height}
                 sizes="100vw"
                 decoding="async"
-                fetchpriority={index === 0 ? 'high' : 'low'}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                {...(index === 0
+                  ? ({ fetchpriority: 'high' } as ImgHTMLAttributes<HTMLImageElement>)
+                  : ({ fetchpriority: 'low' } as ImgHTMLAttributes<HTMLImageElement>))}
               />
               {/* Dark Overlay for Text Readability */}
               <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-black/60 via-black/40 to-transparent" />

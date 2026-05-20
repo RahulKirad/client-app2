@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import PageSeo from '../components/PageSeo';
-import { truncateMeta } from '../lib/seo';
+import { SITE_URL, truncateMeta } from '../lib/seo';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Hero from '../components/sections/Hero';
@@ -26,13 +26,15 @@ const HOME_KEYWORDS =
   'cotton tote bags India, GOTS certified tote bags, sustainable tote bag manufacturer, custom tote bags bulk, eco tote bag exporter India, organic cotton bags, canvas tote bag wholesale';
 const HOME_H1 = 'Organic Cotton Tote Bag Manufacturer & Exporter — India';
 
+const HERO_LCP_PRELOAD = `${SITE_URL}/images/banner/baner5.png`;
+
 const HOME_ORG_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'Cottonunique',
   description: 'GOTS-certified organic cotton tote bag manufacturer and exporter from India',
-  url: 'https://cottoniq.netlify.app',
-  logo: 'https://cottoniq.netlify.app/images/logo/logo.png',
+  url: SITE_URL,
+  logo: `${SITE_URL}/images/logo/logo.png`,
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'sales',
@@ -50,6 +52,7 @@ function MainPage() {
         description={HOME_DESCRIPTION}
         keywords={HOME_KEYWORDS}
         jsonLd={HOME_ORG_JSON_LD}
+        linkPreload={HERO_LCP_PRELOAD}
       />
       <Header />
       <main>

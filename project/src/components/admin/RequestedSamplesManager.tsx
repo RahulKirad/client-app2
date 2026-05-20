@@ -251,6 +251,9 @@ export default function RequestedSamplesManager() {
                           src={resolveMediaUrl(r.product_image_url)}
                           alt=""
                           className="h-full w-full object-cover"
+                          width={96}
+                          height={96}
+                          loading="lazy"
                         />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -321,6 +324,9 @@ export default function RequestedSamplesManager() {
                         src={resolveMediaUrl(modalImages[Math.min(activeImageIndex, modalImages.length - 1)])}
                         alt=""
                         className="h-full w-full object-contain object-center"
+                        width={800}
+                        height={800}
+                        loading="lazy"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-slate-400">No images on file</div>
@@ -337,7 +343,7 @@ export default function RequestedSamplesManager() {
                             i === activeImageIndex ? 'border-amber-600 ring-2 ring-amber-200' : 'border-slate-200 hover:border-slate-300'
                           }`}
                         >
-                          <img src={resolveMediaUrl(url)} alt="" className="h-full w-full object-cover" />
+                          <img src={resolveMediaUrl(url)} alt="" className="h-full w-full object-cover" width={96} height={96} loading="lazy" />
                         </button>
                       ))}
                     </div>

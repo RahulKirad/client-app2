@@ -247,7 +247,7 @@ export default function ContentManager() {
         />
         <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', gap:12, padding:'10px 12px', background:'#f4f5f7', border:'1px solid #e2e5ea', borderRadius:6 }}>
           {value
-            ? <img src={resolveMediaUrl(value)} alt="preview" style={{ width:52, height:52, borderRadius:4, objectFit:'cover', border:'1px solid #e2e5ea', flexShrink:0 }} />
+            ? <img src={resolveMediaUrl(value)} alt="preview" width={52} height={52} loading="lazy" style={{ width:52, height:52, borderRadius:4, objectFit:'cover', border:'1px solid #e2e5ea', flexShrink:0 }} />
             : <div style={{ width:52, height:52, borderRadius:4, background:'#e5e7eb', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                 <svg width="22" height="22" fill="none" stroke="#9ca3af" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               </div>
@@ -426,6 +426,9 @@ export default function ContentManager() {
                               key={`${k}-thumb-${idx}`}
                               src={resolveMediaUrl(url)}
                               alt={`${k} image ${idx + 1}`}
+                              width={44}
+                              height={34}
+                              loading="lazy"
                               style={{ width:44, height:34, objectFit:'cover', borderRadius:6, border:'1px solid #e2e5ea' }}
                             />
                           ))}
@@ -439,7 +442,7 @@ export default function ContentManager() {
                     </div>
                   ) : isImg && typeof v === 'string' ? (
                     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      <img src={resolveMediaUrl(v)} alt={k} style={{ width:48, height:36, objectFit:'cover', borderRadius:4, border:'1px solid #e2e5ea' }} />
+                      <img src={resolveMediaUrl(v)} alt={k} width={48} height={36} loading="lazy" style={{ width:48, height:36, objectFit:'cover', borderRadius:4, border:'1px solid #e2e5ea' }} />
                       <span style={{ fontSize:12, color:'#9ca3af' }}>{v}</span>
                     </div>
                   ) : Array.isArray(v) ? (
@@ -461,7 +464,7 @@ export default function ContentManager() {
                       <div key={nk} style={{ display:'flex', alignItems:'center', gap:4, background:'#f9fafb', padding:'3px 8px', borderRadius:6, border:'1px solid #e2e5ea' }}>
                         <span style={{ fontSize:10, fontWeight:600, color:'#9ca3af' }}>{fmtKey(nk)}:</span>
                         {isLikelyImageField(nk, nv) && typeof nv === 'string' ? (
-                          <img src={resolveMediaUrl(nv)} alt={nk} style={{ width:24, height:18, objectFit:'cover', borderRadius:2 }} />
+                          <img src={resolveMediaUrl(nv)} alt={nk} width={24} height={18} loading="lazy" style={{ width:24, height:18, objectFit:'cover', borderRadius:2 }} />
                         ) : (
                           <span style={{ fontSize:11, color:'#1a1d23' }}>{typeof nv === 'string' ? (nv.length > 30 ? nv.slice(0,30)+'…' : nv) : JSON.stringify(nv)}</span>
                         )}
@@ -636,6 +639,9 @@ export default function ContentManager() {
                                   <img
                                     src={resolveMediaUrl(imageVal)}
                                     alt={`Slide ${idx + 1}`}
+                                    width={44}
+                                    height={34}
+                                    loading="lazy"
                                     style={{ width: 44, height: 34, objectFit: 'cover', borderRadius: 8, border: '1px solid #e2e5ea', flexShrink: 0 }}
                                   />
                                 ) : (

@@ -1,5 +1,6 @@
 import type { Product } from './api';
 import { resolveMediaUrl } from './api';
+import { htmlToPlainText } from './productDescriptionHtml';
 
 export const BRAND_NAME = 'Cottonunique';
 
@@ -56,6 +57,59 @@ export function productSeoFromRecord(product: Product) {
   const image = resolveMediaUrl(product.image_url || undefined);
   const ogImage = image.startsWith('http') ? image : absoluteUrl(image);
   return { title, description, ogImage, ogType: 'product' as const };
+}
+
+export function buildProductJsonLd(product: Product) {
+  const plain =
+    htmlToPlainText(product.description) || buildProductDescription(product.name);
+  const image = resolveMediaUrl(product.image_url || undefined);
+  const imageUrl = image.startsWith('http') ? image : absoluteUrl(image);
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: truncateMeta(plain, 5000),
+    image: imageUrl,
+    brand: {
+      '@type': 'Brand',
+      name: BRAND_NAME,
+    },
+    offers: {
+      '@type': 'Offer',
+      url: absoluteUrl(productPath(product)),
+      priceCurrency: 'INR',
+      price: String(product.price ?? 0),
+      availability: 'https://schema.org/InStock',
+    },
+  };
+}
+
+export function buildProductBreadcrumbJsonLd(product: Product) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: SITE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Products',
+        item: `${SITE_URL}/products`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.name,
+        item: absoluteUrl(productPath(product)),
+      },
+    ],
+  };
 }
 
 export function isInternalAppHref(href: string): boolean {

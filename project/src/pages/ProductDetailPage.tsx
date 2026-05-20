@@ -3,8 +3,16 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Package, ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { apiClient, Product, resolveMediaUrl } from '../lib/api';
 import PageSeo from '../components/PageSeo';
-import { buildTitle, productPath, productSeoFromRecord, truncateMeta } from '../lib/seo';
+import {
+  buildTitle,
+  buildProductBreadcrumbJsonLd,
+  buildProductJsonLd,
+  productPath,
+  productSeoFromRecord,
+  truncateMeta,
+} from '../lib/seo';
 import ExpandableRichProductDescription from '../components/ExpandableRichProductDescription';
+import { IMG } from '../lib/imageSizes';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SampleRequestModal from '../components/SampleRequestModal';
@@ -171,6 +179,7 @@ export default function ProductDetailPage() {
         ogImage={seo.ogImage}
         ogTitle={seo.title}
         ogDescription={seo.description}
+        jsonLd={[buildProductJsonLd(product), buildProductBreadcrumbJsonLd(product)]}
       />
       <Header />
       <main className="pt-20 pb-16">
@@ -238,6 +247,9 @@ export default function ProductDetailPage() {
                     src={mainImageUrl}
                     alt={product.name}
                     className="w-full h-full object-cover transition-opacity duration-300"
+                    width={IMG.product.width}
+                    height={IMG.product.height}
+                    loading="lazy"
                     draggable={false}
                     onLoad={(e) => {
                       const img = e.currentTarget;
@@ -327,6 +339,9 @@ export default function ProductDetailPage() {
                             src={resolveMediaUrl(url)}
                             alt={`${product.name} view ${i + 1}`}
                             className="h-full w-full object-cover"
+                            width={IMG.thumb.width}
+                            height={IMG.thumb.height}
+                            loading="lazy"
                           />
                         </button>
                       ))}
@@ -486,6 +501,9 @@ export default function ProductDetailPage() {
                         src={resolveMediaUrl(related.image_url)}
                         alt={related.name}
                         className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                        width={IMG.product.width}
+                        height={IMG.product.height}
+                        loading="lazy"
                       />
                       <div className="p-4">
                         <h3 className="font-semibold text-slate-900 line-clamp-2" style={{ fontFamily: 'var(--heading-font)' }}>
@@ -582,6 +600,9 @@ export default function ProductDetailPage() {
                     src={mainImageUrl}
                     alt={product.name}
                     className="max-h-[min(72dvh,calc(100dvh-9.5rem))] max-w-full object-contain select-none max-lg:landscape:!max-h-[min(56dvh,calc(100dvh-8.75rem))] sm:max-h-[min(78dvh,calc(100dvh-10.5rem))] md:max-h-[min(82dvh,calc(100dvh-11rem))]"
+                    width={IMG.product.width}
+                    height={IMG.product.height}
+                    loading="lazy"
                     draggable={false}
                     style={{
                       transform: `scale(${zoom})`,
@@ -632,6 +653,9 @@ export default function ProductDetailPage() {
                               src={resolveMediaUrl(url)}
                               alt={`${product.name} thumbnail ${i + 1}`}
                               className="h-full w-full object-cover"
+                              width={IMG.thumb.width}
+                              height={IMG.thumb.height}
+                              loading="lazy"
                             />
                             {active ? (
                               <span className="absolute inset-x-0 bottom-0 bg-black/75 py-0.5 text-center text-[9px] font-semibold text-white sm:text-[10px]">

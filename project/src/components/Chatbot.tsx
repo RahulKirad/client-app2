@@ -201,6 +201,9 @@ export default function Chatbot() {
                 src="/images/favicon.png"
                 alt="Cottonunique"
                 className="w-8 h-8 rounded-full object-contain bg-white flex-shrink-0"
+                width={32}
+                height={32}
+                loading="lazy"
               />
               <h3 className="font-semibold text-base sm:text-lg truncate min-w-0">Cottonunique Assistant</h3>
             </div>
@@ -222,7 +225,7 @@ export default function Chatbot() {
               >
                 {message.role === 'assistant' && (
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white border-2 border-[#C8E6C9] flex items-center justify-center overflow-hidden">
-                    <img src="/images/favicon.png" alt="" className="w-6 h-6 object-contain" />
+                    <img src="/images/favicon.png" alt="" className="w-6 h-6 object-contain" width={24} height={24} loading="lazy" />
                   </div>
                 )}
                 <div
@@ -245,7 +248,7 @@ export default function Chatbot() {
             {loading && (
               <div className="flex gap-3 justify-start">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white border-2 border-[#C8E6C9] flex items-center justify-center overflow-hidden">
-                  <img src="/images/favicon.png" alt="" className="w-6 h-6 object-contain" />
+                  <img src="/images/favicon.png" alt="" className="w-6 h-6 object-contain" width={24} height={24} loading="lazy" />
                 </div>
                 <div className="bg-white text-gray-800 border-2 border-[#C8E6C9] rounded-lg px-4 py-2">
                   <div className="flex gap-1">
