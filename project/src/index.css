@@ -1,0 +1,284 @@
+/* Import custom animations */
+@import './animations.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Pastel Beige Color Palette - Pesco Template Style - Light Shades Only */
+:root {
+  /* Primary Colors - Very Light Pastel Beige */
+  --primary-color: #E8D4B8;
+  --primary-dark-color: #D4C4A8;
+  --primary-light-color: #F2E8D8;
+  
+  /* Secondary Colors - Light Warm Beige */
+  --secondary-color: #E0D4C2;
+  --secondary-light-color: #F5E6D3;
+  
+  /* Neutral Beige Shades - All Light */
+  --beige-50: #FEFCF9;
+  --beige-100: #FAF7F2;
+  --beige-200: #F5F0E8;
+  --beige-300: #EDE4D6;
+  --beige-400: #E8D4B8;
+  --beige-500: #E0D4C2;
+  --beige-600: #D4C4A8;
+  --beige-700: #C9B89A;
+  --beige-800: #B8A88C;
+  --beige-900: #A89B8F;
+  
+  /* Text Colors - Soft and Light */
+  --white-color: #FFFFFF;
+  --text-color: #8B7D6F;
+  --light-gray: #B8A88C;
+  
+  /* Background Colors - Very Light */
+  --main-bg: #FEFCF9;
+  --gray-bg: #FAF7F2;
+  
+  /* Fonts */
+  --heading-font: 'Aoboshi One', serif;
+  --body-font: 'DM Sans', sans-serif;
+  
+  /* Font Sizes - Standardized Typography Scale */
+  --font-xs: 0.75rem;    /* 12px */
+  --font-sm: 0.875rem;   /* 14px */
+  --font-base: 1rem;     /* 16px */
+  --font-lg: 1.125rem;   /* 18px */
+  --font-xl: 1.25rem;    /* 20px */
+  --font-2xl: 1.5rem;    /* 24px */
+  --font-3xl: 1.875rem;  /* 30px */
+  --font-4xl: 2.25rem;   /* 36px */
+  --font-5xl: 3rem;      /* 48px */
+  --font-6xl: 3.75rem;   /* 60px */
+  
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+  
+  /* Heading Colors */
+  --heading-color: #78350F;
+  --heading-color-dark: #5a4a3a;
+  
+  /* Text Colors */
+  --text-primary: #5a4a3a;
+  --text-secondary: #8B7D6F;
+}
+
+/* Pastel Beige Background + Responsive base */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply antialiased;
+    background: var(--main-bg);
+    font-family: var(--body-font);
+    color: var(--text-color);
+    overflow-x: hidden;
+    min-width: 0;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Prevent flex/grid children from overflowing on small screens */
+  .min-w-0 {
+    min-width: 0;
+  }
+}
+
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Pastel Beige Backgrounds */
+  .pastel-beige-bg {
+    background: var(--main-bg);
+  }
+  
+  .pastel-beige-light {
+    background: var(--gray-bg);
+  }
+  
+  .pastel-beige-card {
+    background: var(--beige-100);
+  }
+  
+  /* Soft shadows for beige theme */
+  .soft-shadow {
+    box-shadow: 0 4px 20px rgba(212, 165, 116, 0.1);
+  }
+  
+  .soft-shadow-lg {
+    box-shadow: 0 8px 30px rgba(212, 165, 116, 0.15);
+  }
+  
+  /* Gradient text with beige */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Smooth transitions */
+  .smooth-transition {
+    transition: all 0.3s ease-out;
+  }
+  
+  /* Grid auto-rows for equal height cards */
+  .auto-rows-fr {
+    grid-auto-rows: 1fr;
+  }
+  
+  /* Custom border widths */
+  .border-3 {
+    border-width: 3px;
+  }
+  
+  /* Beige border */
+  .beige-border {
+    border: 1px solid var(--beige-300);
+  }
+  
+  /* Primary button style */
+  .btn-primary-beige {
+    background: var(--primary-color);
+    color: var(--white-color);
+    border: none;
+    padding: 12px 32px;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-primary-beige:hover {
+    background: var(--primary-dark-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+  }
+  
+  /* Standardized Typography Classes */
+  .heading-h1 {
+    font-family: var(--heading-font);
+    font-size: var(--font-5xl);
+    line-height: var(--leading-tight);
+    font-weight: 700;
+    color: var(--heading-color);
+  }
+  
+  .heading-h2 {
+    font-family: var(--heading-font);
+    font-size: var(--font-4xl);
+    line-height: var(--leading-tight);
+    font-weight: 700;
+    color: var(--heading-color);
+  }
+  
+  .heading-h3 {
+    font-family: var(--heading-font);
+    font-size: var(--font-3xl);
+    line-height: var(--leading-snug);
+    font-weight: 600;
+    color: var(--heading-color);
+  }
+  
+  .heading-h4 {
+    font-family: var(--heading-font);
+    font-size: var(--font-2xl);
+    line-height: var(--leading-snug);
+    font-weight: 600;
+    color: var(--heading-color);
+  }
+  
+  .body-text {
+    font-family: var(--body-font);
+    font-size: var(--font-base);
+    line-height: var(--leading-relaxed);
+    color: var(--text-primary);
+  }
+  
+  .body-text-lg {
+    font-family: var(--body-font);
+    font-size: var(--font-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--text-primary);
+  }
+  
+  /* Standardized CTA Button */
+  .btn-cta-primary {
+    font-family: var(--body-font);
+    font-size: var(--font-base);
+    font-weight: 600;
+    padding: 0.875rem 2rem;
+    border-radius: 0.5rem;
+    background-color: var(--beige-600);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-cta-primary:hover {
+    background-color: var(--beige-700);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+  }
+  
+  .btn-cta-primary:focus {
+    outline: 2px solid var(--beige-400);
+    outline-offset: 2px;
+  }
+  
+  .btn-cta-secondary {
+    font-family: var(--body-font);
+    font-size: var(--font-base);
+    font-weight: 600;
+    padding: 0.875rem 2rem;
+    border-radius: 0.5rem;
+    background-color: white;
+    color: var(--beige-700);
+    border: 2px solid var(--beige-400);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-cta-secondary:hover {
+    background-color: var(--beige-100);
+    border-color: var(--beige-600);
+    transform: translateY(-2px);
+  }
+  
+  .btn-cta-secondary:focus {
+    outline: 2px solid var(--beige-400);
+    outline-offset: 2px;
+  }
+}
