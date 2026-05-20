@@ -11,6 +11,51 @@ export const SITE_URL = (
 
 export const DEFAULT_OG_IMAGE = '/images/logo/logo.png';
 
+/** First hero slide — LCP candidate on homepage. */
+export const HERO_LCP_IMAGE_PATH = '/images/banner/baner5.png';
+
+export function buildOrganizationJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: BRAND_NAME,
+    url: SITE_URL,
+    logo: absoluteUrl(DEFAULT_OG_IMAGE),
+    image: absoluteUrl(DEFAULT_OG_IMAGE),
+    description:
+      'GOTS-certified organic cotton tote bag manufacturer and exporter from India. Custom printing, bulk orders, export-ready.',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      email: 'abhishek.deolalikar@gmail.com',
+      availableLanguage: ['English', 'Hindi'],
+    },
+    areaServed: 'Worldwide',
+    knowsAbout: [
+      'organic cotton tote bags',
+      'GOTS certified bags',
+      'sustainable packaging',
+      'custom tote bags',
+    ],
+  };
+}
+
+export function buildWebSiteJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: BRAND_NAME,
+    url: SITE_URL,
+    description:
+      'Premium GOTS-certified sustainable cotton tote bags for corporates, NGOs, and global exporters.',
+    publisher: {
+      '@type': 'Organization',
+      name: BRAND_NAME,
+      logo: absoluteUrl(DEFAULT_OG_IMAGE),
+    },
+  };
+}
+
 export function truncateMeta(text: string, maxLen: number): string {
   const cleaned = text.replace(/\s+/g, ' ').trim();
   if (cleaned.length <= maxLen) return cleaned;

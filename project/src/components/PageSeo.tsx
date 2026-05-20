@@ -47,7 +47,14 @@ export default function PageSeo({
       {keywords ? <meta name="keywords" content={keywords} /> : null}
       <link rel="canonical" href={canonical} />
       {preloadHrefs.map((href) => (
-        <link key={href} rel="preload" as="image" href={href} />
+        <link
+          key={href}
+          rel="preload"
+          as="image"
+          href={href}
+          // @ts-expect-error fetchpriority is valid on link in modern browsers
+          fetchpriority="high"
+        />
       ))}
       <meta property="og:title" content={resolvedOgTitle} />
       <meta property="og:description" content={resolvedOgDescription} />

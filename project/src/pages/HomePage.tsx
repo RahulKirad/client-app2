@@ -1,6 +1,12 @@
 import { Routes, Route } from 'react-router-dom';
 import PageSeo from '../components/PageSeo';
-import { SITE_URL, truncateMeta } from '../lib/seo';
+import {
+  HERO_LCP_IMAGE_PATH,
+  absoluteUrl,
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+  truncateMeta,
+} from '../lib/seo';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Hero from '../components/sections/Hero';
@@ -26,23 +32,7 @@ const HOME_KEYWORDS =
   'cotton tote bags India, GOTS certified tote bags, sustainable tote bag manufacturer, custom tote bags bulk, eco tote bag exporter India, organic cotton bags, canvas tote bag wholesale';
 const HOME_H1 = 'Organic Cotton Tote Bag Manufacturer & Exporter — India';
 
-const HERO_LCP_PRELOAD = `${SITE_URL}/images/banner/baner5.png`;
-
-const HOME_ORG_JSON_LD = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Cottonunique',
-  description: 'GOTS-certified organic cotton tote bag manufacturer and exporter from India',
-  url: SITE_URL,
-  logo: `${SITE_URL}/images/logo/logo.png`,
-  contactPoint: {
-    '@type': 'ContactPoint',
-    contactType: 'sales',
-    availableLanguage: 'English',
-  },
-  keywords:
-    'cotton tote bags, GOTS certified, tote bag manufacturer India, organic cotton bags',
-};
+const HERO_LCP_PRELOAD = absoluteUrl(HERO_LCP_IMAGE_PATH);
 
 function MainPage() {
   return (
@@ -51,7 +41,7 @@ function MainPage() {
         title={HOME_TITLE}
         description={HOME_DESCRIPTION}
         keywords={HOME_KEYWORDS}
-        jsonLd={HOME_ORG_JSON_LD}
+        jsonLd={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]}
         linkPreload={HERO_LCP_PRELOAD}
       />
       <Header />

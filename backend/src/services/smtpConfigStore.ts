@@ -36,10 +36,34 @@ function getEncryptionKey(): Buffer {
   return crypto.createHash('sha256').update(raw, 'utf8').digest();
 }
 
+/** Gmail app passwords are 16 chars; users often paste with spaces or quotes. */
+export function normalizeAppPassword(raw: string): string {
+  return raw.trim().replace(/^["']|["']$/g, '').replace(/\s+/g, '');
+}
+
+function envSmtpCredentials(): ResolvedSmtp | null {
+  const user = process.env.EMAIL_USER?.trim();
+  const pass = normalizeAppPassword(process.env.EMAIL_APP_PASSWORD || '');
+  if (!user || !pass) return null;
+  return { user, pass, source: 'env' };
+}
+
+function preferEnvSmtp(): boolean {
+  const v = (process.env.SMTP_PREFER_ENV || '').trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes';
+}
+
+async function clearInvalidSmtpCiphertext(pool: mysql.Pool): Promise<void> {
+  await pool.execute(
+    `UPDATE ${TABLE} SET app_password_ciphertext = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
+  );
+}
+
 export function encryptAppPassword(plain: string): string {
+  const normalized = normalizeAppPassword(plain);
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(ALGO, getEncryptionKey(), iv);
-  const enc = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
+  const enc = Buffer.concat([cipher.update(normalized, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return [iv, tag, enc].map((b) => b.toString('base64')).join('.');
 }
@@ -53,7 +77,9 @@ export function decryptAppPassword(data: string): string {
   const enc = Buffer.from(encB, 'base64');
   const dec = crypto.createDecipheriv(ALGO, getEncryptionKey(), iv);
   dec.setAuthTag(tag);
-  return Buffer.concat([dec.update(enc), dec.final()]).toString('utf8');
+  return normalizeAppPassword(
+    Buffer.concat([dec.update(enc), dec.final()]).toString('utf8')
+  );
 }
 
 export async function ensureSmtpSettingsTable(mysqlPool: mysql.Pool = getSmtpSettingsPool()): Promise<void> {
@@ -79,6 +105,12 @@ export type ResolvedSmtp = { user: string; pass: string; source: 'database' | 'e
 export async function getResolvedSmtpCredentials(): Promise<ResolvedSmtp | null> {
   await ensureSmtpSettingsTable();
   const pool = getSmtpSettingsPool();
+  const fromEnv = envSmtpCredentials();
+
+  if (preferEnvSmtp() && fromEnv) {
+    return fromEnv;
+  }
+
   try {
     const [rows] = await pool.execute(
       `SELECT email_user, app_password_ciphertext FROM ${TABLE} WHERE id = 1`
@@ -86,6 +118,7 @@ export async function getResolvedSmtpCredentials(): Promise<ResolvedSmtp | null>
     const row = Array.isArray(rows) && rows.length > 0 ? (rows as Record<string, unknown>[])[0] : null;
     const emailUser = String(row?.email_user ?? '').trim();
     const cipher = row?.app_password_ciphertext != null ? String(row.app_password_ciphertext).trim() : '';
+
     if (emailUser && cipher) {
       try {
         const pass = decryptAppPassword(cipher);
@@ -93,19 +126,22 @@ export async function getResolvedSmtpCredentials(): Promise<ResolvedSmtp | null>
           return { user: emailUser, pass, source: 'database' };
         }
       } catch (e) {
-        console.error('smtp_settings: failed to decrypt stored app password, trying .env', e);
+        console.warn(
+          'smtp_settings: clearing invalid encrypted app password (re-save in Admin → Email / SMTP after fixing JWT_SECRET or password).',
+          (e as Error).message
+        );
+        await clearInvalidSmtpCiphertext(pool);
+        if (fromEnv) {
+          console.warn(`smtp_settings: using EMAIL_USER from .env (${fromEnv.user})`);
+          return fromEnv;
+        }
       }
     }
   } catch (e) {
     console.error('smtp_settings: read error', e);
   }
 
-  const envUser = process.env.EMAIL_USER?.trim();
-  const envPass = process.env.EMAIL_APP_PASSWORD?.trim();
-  if (envUser && envPass) {
-    return { user: envUser, pass: envPass, source: 'env' };
-  }
-  return null;
+  return fromEnv;
 }
 
 export type SmtpAdminView = {
