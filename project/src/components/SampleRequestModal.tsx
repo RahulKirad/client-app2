@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Package } from 'lucide-react';
 import { apiClient, Product, resolveMediaUrl } from '../lib/api';
+import { useI18n } from '../contexts/I18nContext';
 
 type Props = {
   product: Product | null;
@@ -10,6 +11,7 @@ type Props = {
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SampleRequestModal({ product, onClose }: Props) {
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
@@ -19,6 +21,8 @@ export default function SampleRequestModal({ product, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
 
   useEffect(() => {
     if (!product) return;
@@ -31,6 +35,8 @@ export default function SampleRequestModal({ product, onClose }: Props) {
     setError('');
     setDone(false);
     setLoading(false);
+    setPrivacyAccepted(false);
+    setNewsletterOptIn(false);
   }, [product?.id]);
 
   useEffect(() => {
@@ -55,6 +61,8 @@ export default function SampleRequestModal({ product, onClose }: Props) {
     name.trim().length > 0 &&
     isEmailValid &&
     message.trim().length >= 10;
+    
+  const canSubmitWithConsent = canSubmit && privacyAccepted;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +79,10 @@ export default function SampleRequestModal({ product, onClose }: Props) {
       setError('Please add a bit more detail (at least 10 characters).');
       return;
     }
+    if (!privacyAccepted) {
+      setError('Please accept the Privacy Policy to continue.');
+      return;
+    }
     setLoading(true);
     try {
       await apiClient.submitSampleRequest({
@@ -80,7 +92,7 @@ export default function SampleRequestModal({ product, onClose }: Props) {
         company: company.trim() || undefined,
         email: email.trim(),
         region: region.trim() || undefined,
-        message: message.trim(),
+        message: `${message.trim()}\n\n[Consent]\nprivacy_policy_accepted=${privacyAccepted ? 'yes' : 'no'}\nnewsletter_opt_in=${newsletterOptIn ? 'yes' : 'no'}\nconsent_timestamp=${new Date().toISOString()}\nconsent_policy_version=2026-05-28`,
       });
       setDone(true);
     } catch {
@@ -233,6 +245,26 @@ export default function SampleRequestModal({ product, onClose }: Props) {
                   className="w-full px-4 py-2.5 rounded-lg border border-stone-300 focus:ring-2 focus:ring-amber-600/30 focus:border-amber-700 resize-y min-h-[100px]"
                 />
               </div>
+              <div className="space-y-2 rounded-lg border border-stone-200 p-3 bg-stone-50">
+                <label className="flex items-start gap-2 text-sm text-stone-800">
+                  <input
+                    type="checkbox"
+                    checked={privacyAccepted}
+                    onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <span>{t('gdpr.privacyAccept')}</span>
+                </label>
+                <label className="flex items-start gap-2 text-sm text-stone-700">
+                  <input
+                    type="checkbox"
+                    checked={newsletterOptIn}
+                    onChange={(e) => setNewsletterOptIn(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <span>{t('gdpr.newsletter')}</span>
+                </label>
+              </div>
               {error ? (
                 <div className="text-sm font-medium text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                   {error}
@@ -244,7 +276,7 @@ export default function SampleRequestModal({ product, onClose }: Props) {
                 </button>
                 <button
                   type="submit"
-                  disabled={!canSubmit}
+                  disabled={!canSubmitWithConsent}
                   className="px-5 py-2.5 rounded-lg font-semibold text-white disabled:opacity-50"
                   style={{ backgroundColor: 'var(--beige-700)' }}
                 >

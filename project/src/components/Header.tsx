@@ -2,21 +2,25 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingBag } from 'lucide-react';
 import { IMG } from '../lib/imageSizes';
+import { useI18n } from '../contexts/I18nContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { locale, setLocale, t } = useI18n();
+  const isGermanDomain =
+    typeof window !== 'undefined' && window.location.hostname.endsWith('.de');
   const isHomePage = location.pathname === '/';
 
   const navLinks = [
-    { name: 'Home', path: '#home', route: '/' },
-    { name: 'About', path: '#about', route: '/' },
-    { name: 'Products', path: '#products-list', route: '/products' },
-    { name: 'Corporate Solutions', path: '#corporate', route: '/' },
-    { name: 'Sustainability', path: '#sustainability', route: '/' },
-    { name: 'Export', path: '#export', route: '/' },
-    { name: 'Contact', path: '#contact', route: '/' },
+    { name: t('nav.home'), path: '#home', route: '/' },
+    { name: t('nav.about'), path: '#about', route: '/' },
+    { name: t('nav.products'), path: '#products-list', route: '/products' },
+    { name: t('nav.corporate'), path: '#corporate', route: '/' },
+    { name: t('nav.sustainability'), path: '#sustainability', route: '/' },
+    { name: t('nav.export'), path: '#export', route: '/' },
+    { name: t('nav.contact'), path: '#contact', route: '/' },
   ];
 
   const scrollToSection = (path: string, route?: string) => {
@@ -97,7 +101,7 @@ export default function Header() {
             />
           </div>
 
-          <nav className="hidden lg:flex items-center space-x-8" aria-label="Main navigation">
+          <nav className="hidden lg:flex items-center space-x-6" aria-label="Main navigation">
             {navLinks.map((link, index) => (
               <button
                 key={link.name}
@@ -110,6 +114,12 @@ export default function Header() {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300 bg-[var(--beige-600)]" aria-hidden />
               </button>
             ))}
+            {isGermanDomain ? (
+              <div className="flex items-center gap-2 text-xs border-l border-[var(--beige-300)] pl-3">
+                <button onClick={() => setLocale('en')} className={`px-2 py-1 rounded ${locale === 'en' ? 'bg-[var(--beige-200)]' : 'hover:bg-[var(--beige-100)]'}`}>EN</button>
+                <button onClick={() => setLocale('de')} className={`px-2 py-1 rounded ${locale === 'de' ? 'bg-[var(--beige-200)]' : 'hover:bg-[var(--beige-100)]'}`}>DE</button>
+              </div>
+            ) : null}
             <button
               onClick={() => scrollToSection('#contact')}
               className="px-6 py-2.5 rounded transition-all duration-200 flex items-center space-x-2 font-medium text-sm"
@@ -119,7 +129,7 @@ export default function Header() {
               aria-label="Get a quote - go to contact"
             >
               <ShoppingBag size={18} aria-hidden />
-              <span>Get a Quote</span>
+              <span>{t('nav.getQuote')}</span>
             </button>
           </nav>
 
@@ -154,8 +164,14 @@ export default function Header() {
               style={{fontFamily: 'var(--body-font)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}
             >
               <ShoppingBag size={18} />
-              <span>Get a Quote</span>
+              <span>{t('nav.getQuote')}</span>
             </button>
+            {isGermanDomain ? (
+              <div className="flex items-center justify-start gap-2 pt-2">
+                <button onClick={() => setLocale('en')} className={`px-2 py-1 rounded text-xs ${locale === 'en' ? 'bg-[var(--beige-200)]' : 'bg-white border border-[var(--beige-300)]'}`}>EN</button>
+                <button onClick={() => setLocale('de')} className={`px-2 py-1 rounded text-xs ${locale === 'de' ? 'bg-[var(--beige-200)]' : 'bg-white border border-[var(--beige-300)]'}`}>DE</button>
+              </div>
+            ) : null}
           </nav>
         </div>
       )}
