@@ -54,11 +54,23 @@ function applyCanonicalContactPhones(content: unknown): unknown {
 // Trust reverse proxy for rate limiter (Hostinger proxy/Cloudflare)
 app.set('trust proxy', 1);
 
+const defaultAllowedOrigins = [
+  'https://cottonunique.com',
+  'https://www.cottonunique.com',
+  'https://cottonunique.de',
+  'https://www.cottonunique.de',
+  'https://app.cottonunique.com',
+  'http://localhost:5173',
+];
+const configuredOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+const allowedOrigins = configuredOrigins.length > 0 ? configuredOrigins : defaultAllowedOrigins;
+
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL
-    ? process.env.FRONTEND_URL
-    : ['https://cottonunique.com', 'https://app.cottonunique.com', 'http://localhost:5173'],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

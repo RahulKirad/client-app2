@@ -47,12 +47,7 @@ function MainPage() {
       <Header />
       <main>
         <div className="relative">
-          <h1
-            className="pointer-events-none absolute inset-x-0 top-20 z-[25] px-4 text-center text-xs font-bold text-white drop-shadow-lg sm:text-sm"
-            style={{ fontFamily: 'var(--heading-font)' }}
-          >
-            {HOME_H1}
-          </h1>
+          <h1 className="sr-only">{HOME_H1}</h1>
           <Hero />
         </div>
         <About />

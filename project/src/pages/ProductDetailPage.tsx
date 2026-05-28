@@ -16,8 +16,10 @@ import { IMG } from '../lib/imageSizes';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SampleRequestModal from '../components/SampleRequestModal';
+import { useI18n } from '../contexts/I18nContext';
 
 export default function ProductDetailPage() {
+  const { t, locale } = useI18n();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
@@ -430,7 +432,7 @@ export default function ProductDetailPage() {
 
               {/* Full description (clamp + Read more when long) */}
               <div className="mb-8">
-                <h2 className="text-lg font-semibold text-slate-900 mb-2">Description</h2>
+                <h2 className="text-lg font-semibold text-slate-900 mb-2">{t('ecom.productDescription')}</h2>
                 <ExpandableRichProductDescription description={product.description} />
               </div>
 
@@ -456,7 +458,7 @@ export default function ProductDetailPage() {
               {/* Specifications */}
               {specEntries.length > 0 && (
                 <div className="mb-8">
-                  <h2 className="text-lg font-semibold text-slate-900 mb-3">Specifications</h2>
+                  <h2 className="text-lg font-semibold text-slate-900 mb-3">{t('ecom.size')}</h2>
                   <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {specEntries.map(([key, value]) => (
                       <div key={key} className="flex justify-between gap-4 py-2 border-b border-slate-100">
@@ -472,6 +474,14 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
+              <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 space-y-2">
+                <p><span className="font-semibold text-slate-900">{t('compliance.vatIncluded')}</span></p>
+                <p>{t('compliance.shippingInfo')}</p>
+                <p>{t('compliance.delivery')}</p>
+                <p>{t('compliance.returnPolicy')} <Link className="underline" to="/widerruf">{t('ecom.returnPolicy')}</Link></p>
+                <p>{t('ecom.stock')}: <span className="font-medium">{locale === 'de' ? 'Verfügbar' : 'In stock'}</span></p>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setSampleModalOpen(true)}
@@ -479,7 +489,7 @@ export default function ProductDetailPage() {
                 style={{ backgroundColor: 'var(--beige-600)' }}
               >
                 <ShoppingBag size={20} />
-                Request Sample
+                {locale === 'de' ? 'Muster anfragen' : 'Request Sample'}
               </button>
               </div>
             </div>
@@ -488,7 +498,7 @@ export default function ProductDetailPage() {
           {relatedProducts.length > 0 ? (
             <section className="mt-16 pt-12 border-t border-slate-200" aria-labelledby="related-products-heading">
               <h2 id="related-products-heading" className="text-2xl font-bold text-slate-900 mb-6" style={{ fontFamily: 'var(--heading-font)' }}>
-                Related Products
+                {t('ecom.relatedProducts')}
               </h2>
               <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {relatedProducts.map((related) => (
