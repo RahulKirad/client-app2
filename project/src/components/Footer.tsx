@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom';
 import { Mail, Phone } from 'lucide-react';
 import { useManagedSectionContent } from '../hooks/useManagedSectionContent';
 import { IMG } from '../lib/imageSizes';
+import { useI18n } from '../contexts/I18nContext';
 
 export default function Footer() {
+  const { t } = useI18n();
   const currentYear = new Date().getFullYear();
   const contactFallback = {
     email_primary: 'abhishek.deolalikar@gmail.com',
@@ -113,21 +115,13 @@ export default function Footer() {
           <p className="text-white/90 text-sm font-medium transform transition-all duration-300 hover:scale-105" style={{fontFamily: 'var(--heading-font)'}}>
             © {currentYear} Cottonunique. All rights reserved.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
+          <div className="flex flex-wrap gap-4 mt-4 md:mt-0 justify-center md:justify-end">
             <Link 
               to="/privacy" 
               className="text-white/90 hover:text-[#FBBF24] text-sm transition-all duration-300 font-medium uppercase tracking-wide transform hover:scale-110 relative group" 
               style={{fontFamily: 'var(--heading-font)'}}
             >
-              Privacy Policy
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FBBF24] group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link 
-              to="/#contact" 
-              className="text-white/90 hover:text-[#FBBF24] text-sm transition-all duration-300 font-medium uppercase tracking-wide transform hover:scale-110 relative group" 
-              style={{fontFamily: 'var(--heading-font)'}}
-            >
-              Contact Us
+              {t('footer.privacy')}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FBBF24] group-hover:w-full transition-all duration-300"></span>
             </Link>
           </div>

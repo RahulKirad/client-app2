@@ -11,7 +11,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SampleRequestModal from '../components/SampleRequestModal';
 
-const PRODUCTS_PER_PAGE = 8;
+const PRODUCTS_PER_PAGE = 10;
 
 /** All searchable text for a product (name, fields, specs, price). */
 function productSearchHaystack(p: Product): string {
