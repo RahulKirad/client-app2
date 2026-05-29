@@ -10,9 +10,11 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, isGermanDomain } = useI18n();
   const isHomePage = location.pathname === '/';
   const [showLanguageToggle, setShowLanguageToggle] = useState(false);
+  const canShowLanguageToggle =
+    showLanguageToggle || isGermanDomain || import.meta.env.DEV;
 
   useEffect(() => {
     const cacheKey = 'cu_site_settings_v1';
@@ -152,8 +154,14 @@ export default function Header() {
               <ShoppingBag size={18} aria-hidden />
               <span>{t('nav.getQuote')}</span>
             </button>
-            {showLanguageToggle ? <LanguageToggle /> : null}
+            {canShowLanguageToggle ? <LanguageToggle /> : null}
           </nav>
+
+          {canShowLanguageToggle ? (
+            <div className="lg:hidden flex items-center shrink-0 mr-1">
+              <LanguageToggle />
+            </div>
+          ) : null}
 
           <button
             type="button"
@@ -188,8 +196,8 @@ export default function Header() {
               <ShoppingBag size={18} />
               <span>{t('nav.getQuote')}</span>
             </button>
-            {showLanguageToggle ? (
-              <div className="flex justify-end pt-2">
+            {canShowLanguageToggle ? (
+              <div className="flex justify-center pt-4 pb-1">
                 <LanguageToggle />
               </div>
             ) : null}
