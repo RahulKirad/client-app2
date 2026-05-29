@@ -6,6 +6,16 @@ exports.ensureToteBagInSlug = ensureToteBagInSlug;
 exports.slugNeedsSeoUpdate = slugNeedsSeoUpdate;
 exports.generateUniqueProductSlug = generateUniqueProductSlug;
 exports.migrateProductSlugsToSeoPattern = migrateProductSlugsToSeoPattern;
+function toSlug(name) {
+    return String(name ?? '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-{2,}/g, '-');
+}
 const CANONICAL_SLUG_RULES = [
     {
         match: (s) => s.includes('ecotote') && s.includes('duopack'),
@@ -24,16 +34,6 @@ const CANONICAL_SLUG_RULES = [
         slug: 'sunflower-embroidered-tote-bag',
     },
 ];
-function toSlug(name) {
-    return String(name ?? '')
-        .trim()
-        .toLowerCase()
-        .normalize('NFKD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .replace(/-{2,}/g, '-');
-}
 function resolvePreferredProductSlug(name) {
     const nameSlug = toSlug(name);
     if (!nameSlug)

@@ -1,5 +1,7 @@
 import { Globe, FileText, Languages, Shield, Download, CheckCircle, Award } from 'lucide-react';
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
+import { useI18n } from '../../contexts/I18nContext';
+import { exportCopy, pickLocalized } from '../../i18n/staticSectionCopy';
 import Banner from './Banner';
 
 const exportFallback = {
@@ -10,48 +12,21 @@ const exportFallback = {
   image: '/images/new/WhatsApp Image 2025-12-27 at 6.17.08 PM (2).jpeg',
 };
 
+const serviceIcons = [FileText, Shield, Languages, CheckCircle];
+
 export default function Export() {
-  const { content: sectionContent } = useManagedSectionContent('export', exportFallback);
-  const regions = [
-    { name: 'European Union', code: 'EU', flag: '🇪🇺' },
-    { name: 'United States', code: 'US', flag: '🇺🇸' },
-    { name: 'Asia Pacific', code: 'APAC', flag: '🌏' },
-    { name: 'Middle East', code: 'ME', flag: '🌍' },
-  ];
+  const { t, effectiveLocale } = useI18n();
+  const { content: sectionContent } = useLocalizedSectionContent('export', exportFallback);
+  const localized = pickLocalized(effectiveLocale, exportCopy);
 
-  const services = [
-    {
-      icon: FileText,
-      title: 'HS Codes & Documentation',
-      description: 'Complete customs documentation with accurate harmonized system codes',
-    },
-    {
-      icon: Shield,
-      title: 'Compliance Markings',
-      description: 'CE markings and region-specific compliance certifications',
-    },
-    {
-      icon: Languages,
-      title: 'Localized Labeling',
-      description: 'Multi-language product labels and packaging materials',
-    },
-    {
-      icon: CheckCircle,
-      title: 'GST & MSME Support',
-      description: 'Full tax compliance for Indian export businesses',
-    },
-  ];
-
-  const documents = [
-    'Commercial Invoice',
-    'Packing List',
-    'Certificate of Origin',
-    'Bill of Lading',
-    'Export License',
-    'GOTS Certificate',
-    'FSC Certificate',
-    'Quality Test Reports',
-  ];
+  const regions = localized.regions;
+  const services = localized.services.map((item, index) => ({
+    icon: serviceIcons[index] ?? FileText,
+    title: item.title,
+    description: item.description,
+  }));
+  const documents = localized.documents;
+  const certifications = localized.certifications;
 
   const scrollToContact = () => {
     const element = document.querySelector('#contact');
@@ -77,8 +52,11 @@ export default function Export() {
           <Banner
             bannerKey="export_banner"
             fallback={{
-              title: 'Export & Compliance',
-              subtitle: 'Seamless global delivery with complete compliance',
+              title: effectiveLocale === 'de' ? 'Export & Compliance' : 'Export & Compliance',
+              subtitle:
+                effectiveLocale === 'de'
+                  ? 'Nahtlose weltweite Lieferung mit vollständiger Konformität'
+                  : 'Seamless global delivery with complete compliance',
               image: '/images/new/WhatsApp Image 2025-12-27 at 6.17.08 PM (2).jpeg',
             }}
             className="soft-shadow-lg"
@@ -88,7 +66,7 @@ export default function Export() {
         <div className="mb-16">
           <div className="flex items-center justify-center mb-12">
             <Globe className="mr-3" size={36} style={{color: 'var(--beige-700)'}} />
-            <h3 className="text-3xl font-black text-[#78350F] uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>Regions We Serve</h3>
+            <h3 className="text-3xl font-black text-[#78350F] uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>{t('export.regionsTitle')}</h3>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {regions.map((region, index) => (
@@ -105,7 +83,7 @@ export default function Export() {
         </div>
 
         <div className="mb-16">
-          <h3 className="text-3xl font-black text-[#78350F] text-center mb-12 uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>Export Support Services</h3>
+          <h3 className="text-3xl font-black text-[#78350F] text-center mb-12 uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>{t('export.servicesTitle')}</h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {services.map((service, index) => (
               <div
@@ -124,7 +102,7 @@ export default function Export() {
 
         <div className="bg-white rounded-xl p-8 sm:p-12 shadow-2xl border border-[var(--beige-300)]">
           <h3 className="text-3xl font-black text-[#78350F] text-center mb-12 uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>
-            Complete Documentation Package
+            {t('export.docsTitle')}
           </h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             {documents.map((doc, index) => (
@@ -145,10 +123,9 @@ export default function Export() {
               <div className="mb-6">
                 <FileText className="mx-auto" size={56} style={{color: '#78350F'}} />
               </div>
-              <h4 className="text-3xl font-bold mb-4" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>Export-Ready From Day One</h4>
+              <h4 className="text-3xl font-bold mb-4" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>{t('export.exportReadyTitle')}</h4>
               <p className="mb-8 leading-relaxed text-base" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>
-                We handle all the paperwork, compliance, and logistics so you can focus on growing your business.
-                Every order ships with complete documentation and region-specific compliance.
+                {t('export.exportReadyBody')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
@@ -170,16 +147,12 @@ export default function Export() {
             <div className="p-2 rounded-full" style={{backgroundColor: 'var(--beige-200)'}}>
               <Award className="animate-bounce-subtle" size={28} style={{color: '#78350F'}} />
             </div>
-            <h3 className="text-2xl sm:text-3xl font-black ml-3 uppercase tracking-wide" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>Our Certifications</h3>
+            <h3 className="text-2xl sm:text-3xl font-black ml-3 uppercase tracking-wide" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>{t('export.certsTitle')}</h3>
           </div>
 
           {/* Certifications Cards */}
           <div className="grid sm:grid-cols-3 gap-5 mb-10">
-            {[
-              { name: 'GOTS', description: 'Global Organic Textile Standard' },
-              { name: 'FSC', description: 'Forest Stewardship Council' },
-              { name: 'MSME', description: 'Export Compliance Certified' },
-            ].map((cert, index) => (
+            {certifications.slice(0, 3).map((cert, index) => (
               <div
                 key={index}
                 className="relative rounded-2xl p-5 shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] group overflow-hidden"

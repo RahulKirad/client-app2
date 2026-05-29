@@ -1,5 +1,7 @@
 import { Leaf, Recycle, Droplets, TreePine, TrendingDown, Users, Download, Package, Factory, CheckCircle } from 'lucide-react';
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
+import { useI18n } from '../../contexts/I18nContext';
+import { pickLocalized, sustainabilityCopy } from '../../i18n/staticSectionCopy';
 import Banner from './Banner';
 
 const sustainabilityFallback = {
@@ -9,57 +11,28 @@ const sustainabilityFallback = {
   image: '/images/new/WhatsApp Image 2025-12-27 at 6.17.05 PM.jpeg',
 };
 
-export default function Sustainability() {
-  const { content: sectionContent } = useManagedSectionContent('sustainability', sustainabilityFallback);
-  const materials = [
-    {
-      icon: Leaf,
-      title: '100% GOTS-Certified Cotton',
-      description: 'Organically grown without harmful pesticides or chemicals',
-    },
-    {
-      icon: Recycle,
-      title: 'Recycled Stitching Threads',
-      description: 'Post-consumer recycled materials for all stitching',
-    },
-    {
-      icon: TreePine,
-      title: 'Biodegradable Packaging',
-      description: 'FSC-certified materials that return to nature',
-    },
-    {
-      icon: Droplets,
-      title: 'Water-Based Inks',
-      description: 'Non-toxic, eco-friendly printing solutions',
-    },
-  ];
+const materialIcons = [Leaf, Recycle, TreePine, Droplets];
+const impactIcons = [TrendingDown, Users, Leaf, Droplets];
 
-  const impacts = [
-    {
-      icon: TrendingDown,
-      metric: '60%',
-      label: 'Reduced Carbon Footprint',
-      description: 'Compared to conventional cotton production',
-    },
-    {
-      icon: Users,
-      metric: '100%',
-      label: 'Ethical Labor',
-      description: 'Fair wages and safe working conditions',
-    },
-    {
-      icon: Leaf,
-      metric: '500+',
-      label: 'Trees Saved',
-      description: 'Through plastic-free packaging annually',
-    },
-    {
-      icon: Droplets,
-      metric: '90%',
-      label: 'Water Conservation',
-      description: 'Compared to traditional dyeing methods',
-    },
-  ];
+export default function Sustainability() {
+  const { t, effectiveLocale } = useI18n();
+  const { content: sectionContent } = useLocalizedSectionContent('sustainability', sustainabilityFallback);
+  const localized = pickLocalized(effectiveLocale, sustainabilityCopy);
+
+  const materials = localized.materials.map((item, index) => ({
+    icon: materialIcons[index] ?? Leaf,
+    title: item.title,
+    description: item.description,
+  }));
+
+  const impacts = localized.impacts.map((item, index) => ({
+    icon: impactIcons[index] ?? TrendingDown,
+    metric: item.metric,
+    label: item.label,
+    description: item.description,
+  }));
+
+  const supplySteps = localized.supplyChain;
 
   return (
     <section id="sustainability" className="py-20 paper-texture" style={{ backgroundColor: '#FFFBF5' }}>
@@ -78,8 +51,11 @@ export default function Sustainability() {
           <Banner
             bannerKey="sustainability_banner"
             fallback={{
-              title: 'Sustainability First',
-              subtitle: 'Every product tells a story of positive impact',
+              title: effectiveLocale === 'de' ? 'Nachhaltigkeit zuerst' : 'Sustainability First',
+              subtitle:
+                effectiveLocale === 'de'
+                  ? 'Jedes Produkt erzählt eine Geschichte positiver Wirkung'
+                  : 'Every product tells a story of positive impact',
               image: '/images/new/WhatsApp Image 2025-12-27 at 6.17.05 PM.jpeg',
             }}
             className="soft-shadow-lg"
@@ -89,7 +65,7 @@ export default function Sustainability() {
         <div className="mb-20">
           <div className="flex items-center justify-center mb-12">
             <Leaf className="mr-3" size={36} style={{color: '#78350F'}} />
-            <h3 className="text-3xl font-black text-[#78350F] uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>Our Materials</h3>
+            <h3 className="text-3xl font-black text-[#78350F] uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>{t('sustainability.materialsTitle')}</h3>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {materials.map((material, index) => (
@@ -109,7 +85,7 @@ export default function Sustainability() {
 
         <div className="mb-20">
           <div className="flex items-center justify-center mb-12">
-            <h3 className="text-3xl font-black text-[#78350F] uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>Our Impact</h3>
+            <h3 className="text-3xl font-black text-[#78350F] uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>{t('sustainability.impactTitle')}</h3>
           </div>
           <div className="relative overflow-x-auto pb-8">
             <div className="flex items-center justify-center gap-16 sm:gap-20 lg:gap-24 xl:gap-32 min-w-max px-4">
@@ -142,7 +118,7 @@ export default function Sustainability() {
 
         <div className="rounded-lg p-8 sm:p-12 relative overflow-hidden" style={{backgroundColor: 'var(--beige-200)'}}>
           <div className="max-w-6xl mx-auto">
-            <h3 className="text-3xl sm:text-4xl font-bold mb-8 text-center" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>Traceable Supply Chain</h3>
+            <h3 className="text-3xl sm:text-4xl font-bold mb-8 text-center" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>{t('sustainability.supplyTitle')}</h3>
             
             {/* Three Step Flow */}
             <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-4 relative py-8">
@@ -151,9 +127,9 @@ export default function Sustainability() {
                 <div className="w-28 h-28 rounded-xl flex items-center justify-center mb-4 shadow-sm" style={{backgroundColor: 'var(--beige-300)'}}>
                   <Package size={56} style={{color: '#78350F'}} />
                 </div>
-                <h4 className="text-base font-bold mb-3 uppercase tracking-wide" style={{color: '#78350F'}}>Organic Cotton Farms</h4>
+                <h4 className="text-base font-bold mb-3 uppercase tracking-wide" style={{color: '#78350F'}}>{supplySteps[0]?.title}</h4>
                 <p className="text-sm leading-relaxed text-center" style={{color: '#5a4a3a'}}>
-                  From farm to finished product, every step in our supply chain is documented and verified. We believe in complete transparency, so you can trust that your tote bags are truly sustainable.
+                  {supplySteps[0]?.description}
                 </p>
               </div>
 
@@ -179,9 +155,9 @@ export default function Sustainability() {
                 <div className="w-28 h-28 rounded-xl flex items-center justify-center mb-4 shadow-sm" style={{backgroundColor: 'var(--beige-300)'}}>
                   <Factory size={56} style={{color: '#78350F'}} />
                 </div>
-                <h4 className="text-base font-bold mb-3 uppercase tracking-wide" style={{color: '#78350F'}}>Ethical Manufacturing</h4>
+                <h4 className="text-base font-bold mb-3 uppercase tracking-wide" style={{color: '#78350F'}}>{supplySteps[1]?.title}</h4>
                 <p className="text-sm leading-relaxed text-center" style={{color: '#5a4a3a'}}>
-                  From farm to finished product, every step in our supply chain is documented and verified. We believe in complete transparency, so you can trust that your tote bags are truly sustainable.
+                  {supplySteps[1]?.description}
                 </p>
               </div>
 
@@ -207,9 +183,9 @@ export default function Sustainability() {
                 <div className="w-28 h-28 rounded-xl flex items-center justify-center mb-4 shadow-sm" style={{backgroundColor: 'var(--beige-300)'}}>
                   <CheckCircle size={56} style={{color: '#78350F'}} />
                 </div>
-                <h4 className="text-base font-bold mb-3 uppercase tracking-wide" style={{color: '#78350F'}}>Quality Assurance</h4>
+                <h4 className="text-base font-bold mb-3 uppercase tracking-wide" style={{color: '#78350F'}}>{supplySteps[2]?.title}</h4>
                 <p className="text-sm leading-relaxed text-center" style={{color: '#5a4a3a'}}>
-                  From farm to finished product, every step in our supply chain is documented and verified. We believe in complete transparency, so you can trust that your tote bags are truly sustainable.
+                  {supplySteps[2]?.description}
                 </p>
               </div>
             </div>

@@ -1,11 +1,13 @@
 import { CheckCircle, ShoppingBag, Package, Leaf } from 'lucide-react';
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
+import { useI18n } from '../../contexts/I18nContext';
 import { resolveMediaUrl } from '../../lib/api';
 import { ecototeDuopackDefaults, mergeEcototeContent } from '../../data/ecototeDuopackDefaults';
 import { IMG } from '../../lib/imageSizes';
 
 export default function EcoToteDuoPack() {
-  const { content: sectionContent } = useManagedSectionContent(
+  const { t } = useI18n();
+  const { content: sectionContent } = useLocalizedSectionContent(
     'ecotote_duopack',
     ecototeDuopackDefaults as unknown as Record<string, unknown>
   );
@@ -22,7 +24,7 @@ export default function EcoToteDuoPack() {
               <div className="relative flex w-full min-h-[10rem] items-center justify-center overflow-hidden rounded-2xl bg-white sm:min-h-[11rem]">
                 <img
                   src={resolveMediaUrl(String(c.image || ecototeDuopackDefaults.image))}
-                  alt="EcoTote DuoPack - Sustainable Garment Packaging"
+                  alt={t('ecotote.imgAlt')}
                   className="mx-auto block h-auto max-h-[min(64dvh,32rem)] w-auto max-w-full object-contain sm:max-h-[min(68dvh,36rem)] md:max-h-[min(74dvh,40rem)] lg:max-h-[min(78dvh,44rem)]"
                   width={IMG.product.width}
                   height={IMG.product.height}
@@ -63,28 +65,28 @@ export default function EcoToteDuoPack() {
               border: '1px solid rgba(235, 220, 195, 0.5)'
             }}>
               <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2" style={{color: '#1a1a1a', fontFamily: 'var(--heading-font)'}}>
-                Why Choose EcoTote DuoPack
+                {t('ecotote.whyTitle')}
               </h3>
               <p className="body-text text-xs sm:text-sm mb-2 md:mb-3" style={{color: '#1a1a1a', fontFamily: 'var(--body-font)'}}>
-                Over 20 years of sustainable packaging experience with leading fashion brands and global exporters.
+                {t('ecotote.whyIntro')}
               </p>
               <div className="space-y-1.5">
                 <div className="flex items-start gap-2">
                   <CheckCircle size={16} className="sm:w-[18px] sm:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm" style={{color: '#1a1a1a', fontFamily: 'var(--body-font)'}}>
-                    Zero-waste: Reusable + compostable packaging
+                    {t('ecotote.benefit1')}
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle size={16} className="sm:w-[18px] sm:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm" style={{color: '#1a1a1a', fontFamily: 'var(--body-font)'}}>
-                    EU compliant: Plastic-free export ready
+                    {t('ecotote.benefit.eu')}
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle size={16} className="sm:w-[18px] sm:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm" style={{color: '#1a1a1a', fontFamily: 'var(--body-font)'}}>
-                    Flexible MOQ: Starting from 500 units
+                    {t('ecotote.benefit.moq')}
                   </span>
                 </div>
               </div>
@@ -109,25 +111,25 @@ export default function EcoToteDuoPack() {
                 <div className="flex items-start gap-2 md:gap-2.5">
                   <CheckCircle size={16} className="md:w-[18px] md:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm">
-                    <strong>Material:</strong> {c.outer_bag.material}
+                    <strong>{t('ecotote.spec.material')}:</strong> {c.outer_bag.material}
                   </span>
                 </div>
                 <div className="flex items-start gap-2 md:gap-2.5">
                   <CheckCircle size={16} className="md:w-[18px] md:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm">
-                    <strong>Size:</strong> {c.outer_bag.size}
+                    <strong>{t('ecotote.spec.size')}:</strong> {c.outer_bag.size}
                   </span>
                 </div>
                 <div className="flex items-start gap-2 md:gap-2.5">
                   <CheckCircle size={16} className="md:w-[18px] md:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm">
-                    <strong>Printing:</strong> {c.outer_bag.printing}
+                    <strong>{t('ecotote.spec.printing')}:</strong> {c.outer_bag.printing}
                   </span>
                 </div>
                 <div className="flex items-start gap-2 md:gap-2.5">
                   <CheckCircle size={16} className="md:w-[18px] md:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm">
-                    <strong>Certification:</strong> {c.outer_bag.certification}
+                    <strong>{t('ecotote.spec.certification')}:</strong> {c.outer_bag.certification}
                   </span>
                 </div>
               </div>
@@ -147,25 +149,25 @@ export default function EcoToteDuoPack() {
                 <div className="flex items-start gap-2 md:gap-2.5">
                   <CheckCircle size={16} className="md:w-[18px] md:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm">
-                    <strong>Material:</strong> {c.inner_bag.material}
+                    <strong>{t('ecotote.spec.material')}:</strong> {c.inner_bag.material}
                   </span>
                 </div>
                 <div className="flex items-start gap-2 md:gap-2.5">
                   <CheckCircle size={16} className="md:w-[18px] md:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm">
-                    <strong>Size:</strong> {c.inner_bag.size}
+                    <strong>{t('ecotote.spec.size')}:</strong> {c.inner_bag.size}
                   </span>
                 </div>
                 <div className="flex items-start gap-2 md:gap-2.5">
                   <CheckCircle size={16} className="md:w-[18px] md:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm">
-                    <strong>Finish:</strong> {c.inner_bag.finish}
+                    <strong>{t('ecotote.spec.finish')}:</strong> {c.inner_bag.finish}
                   </span>
                 </div>
                 <div className="flex items-start gap-2 md:gap-2.5">
                   <CheckCircle size={16} className="md:w-[18px] md:h-[18px] mt-0.5 flex-shrink-0" style={{color: 'var(--beige-700)'}} />
                   <span className="body-text text-xs sm:text-sm">
-                    <strong>Certification:</strong> {c.inner_bag.certification}
+                    <strong>{t('ecotote.spec.certification')}:</strong> {c.inner_bag.certification}
                   </span>
                 </div>
               </div>

@@ -1,7 +1,8 @@
 import { useState, useEffect, type ImgHTMLAttributes } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
+import { useI18n } from '../../contexts/I18nContext';
 import { resolveMediaUrl } from '../../lib/api';
 import { IMG } from '../../lib/imageSizes';
 
@@ -50,7 +51,8 @@ const heroContentFallback = {
 };
 
 export default function Hero() {
-  const { content: heroContent, version: heroVersion } = useManagedSectionContent('hero', heroContentFallback);
+  const { t } = useI18n();
+  const { content: heroContent, version: heroVersion } = useLocalizedSectionContent('hero', heroContentFallback);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -184,7 +186,7 @@ export default function Hero() {
             prevSlide();
           }}
           className="pointer-events-none absolute left-2 top-1/2 z-30 -translate-y-1/2 rounded-full border border-white/30 bg-white/10 p-2 text-white opacity-0 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white/20 hover:border-white/50 focus-visible:pointer-events-auto focus-visible:opacity-100 sm:left-4 sm:p-2.5 group-hover:pointer-events-auto group-hover:opacity-100"
-          aria-label="Previous slide"
+          aria-label={t('hero.prevSlide')}
         >
           <ChevronLeft size={22} className="drop-shadow-md" strokeWidth={2.25} aria-hidden />
         </button>
@@ -195,7 +197,7 @@ export default function Hero() {
             nextSlide();
           }}
           className="pointer-events-none absolute right-2 top-1/2 z-30 -translate-y-1/2 rounded-full border border-white/30 bg-white/10 p-2 text-white opacity-0 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white/20 hover:border-white/50 focus-visible:pointer-events-auto focus-visible:opacity-100 sm:right-4 sm:p-2.5 group-hover:pointer-events-auto group-hover:opacity-100"
-          aria-label="Next slide"
+          aria-label={t('hero.nextSlide')}
         >
           <ChevronRight size={22} className="drop-shadow-md" strokeWidth={2.25} aria-hidden />
         </button>

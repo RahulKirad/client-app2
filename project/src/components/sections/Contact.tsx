@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Mail, Phone, Send, CheckCircle } from 'lucide-react';
 import { apiClient } from '../../lib/api';
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
+import { useI18n } from '../../contexts/I18nContext';
 
 const contactInfoFallback = {
   heading: 'Get in Touch',
@@ -13,7 +14,8 @@ const contactInfoFallback = {
 };
 
 export default function Contact() {
-  const { content: contactInfo } = useManagedSectionContent('contact', contactInfoFallback);
+  const { t } = useI18n();
+  const { content: contactInfo } = useLocalizedSectionContent('contact', contactInfoFallback);
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const [formData, setFormData] = useState({
     name: '',
@@ -38,23 +40,23 @@ export default function Contact() {
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
-      setError('Please enter your full name.');
+      setError(t('contact.error.name'));
       return false;
     }
     if (!formData.email.trim()) {
-      setError('Please enter your email address.');
+      setError(t('contact.error.email'));
       return false;
     }
     if (!emailRegex.test(formData.email.trim())) {
-      setError('Please enter a valid email address.');
+      setError(t('contact.error.emailInvalid'));
       return false;
     }
     if (!formData.message.trim()) {
-      setError('Please tell us what you need.');
+      setError(t('contact.error.message'));
       return false;
     }
     if (formData.message.trim().length < 10) {
-      setError('Please provide more detail in your message (at least 10 characters).');
+      setError(t('contact.error.messageShort'));
       return false;
     }
     return true;
@@ -89,7 +91,7 @@ export default function Contact() {
       setTimeout(() => setSubmitted(false), 5000);
     } catch (err) {
       console.error('Error submitting form:', err);
-      setError('Failed to submit inquiry. Please try again.');
+      setError(t('contact.error.submit'));
     } finally {
       setLoading(false);
     }
@@ -114,14 +116,14 @@ export default function Contact() {
         <div className="grid lg:grid-cols-2 gap-12">
           <div>
             <div className="rounded-lg p-8 soft-shadow-lg mb-8 beige-border" style={{backgroundColor: 'var(--beige-200)'}}>
-              <h3 className="text-2xl font-bold mb-6" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>Contact Information</h3>
+              <h3 className="text-2xl font-bold mb-6" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>{t('contact.infoTitle')}</h3>
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
                   <div className="p-3 rounded-lg beige-border" style={{backgroundColor: 'var(--beige-300)'}}>
                     <Mail size={24} style={{color: '#78350F'}} />
                   </div>
                   <div>
-                    <p className="font-bold uppercase tracking-wide" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>Email Us</p>
+                    <p className="font-bold uppercase tracking-wide" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>{t('contact.emailUs')}</p>
                     <p className="font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>
                       {String(contactInfo.email_primary || contactInfoFallback.email_primary)}
                     </p>
@@ -133,39 +135,25 @@ export default function Contact() {
                     <Phone size={24} style={{color: '#78350F'}} />
                   </div>
                   <div>
-                    <p className="font-bold uppercase tracking-wide" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>Call Us</p>
+                    <p className="font-bold uppercase tracking-wide" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>{t('contact.callUs')}</p>
                     <p className="font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>
                       {String(contactInfo.phone || contactInfoFallback.phone)}
                     </p>
-                    <p className="text-sm font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>Mon-Fri, 9am-6pm IST</p>
+                    <p className="text-sm font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>{t('contact.hours')}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="rounded-lg p-8 soft-shadow-lg beige-border" style={{backgroundColor: 'var(--beige-200)'}}>
-              <h4 className="text-2xl font-bold mb-4" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>Why Choose Cottonunique?</h4>
+              <h4 className="text-2xl font-bold mb-4" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>{t('contact.whyTitle')}</h4>
               <ul className="space-y-3">
-                <li className="flex items-start space-x-3">
-                  <CheckCircle className="flex-shrink-0 mt-1" size={20} style={{color: '#78350F'}} />
-                  <span className="font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>GOTS & FSC certified sustainable materials</span>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <CheckCircle className="flex-shrink-0 mt-1" size={20} style={{color: '#78350F'}} />
-                  <span className="font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>Complete export documentation support</span>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <CheckCircle className="flex-shrink-0 mt-1" size={20} style={{color: '#78350F'}} />
-                  <span className="font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>Custom branding and design services</span>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <CheckCircle className="flex-shrink-0 mt-1" size={20} style={{color: '#78350F'}} />
-                  <span className="font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>Flexible MOQ for pilot programs</span>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <CheckCircle className="flex-shrink-0 mt-1" size={20} style={{color: '#78350F'}} />
-                  <span className="font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>Global delivery to 50+ countries</span>
-                </li>
+                {[t('contact.why1'), t('contact.why2'), t('contact.why3'), t('contact.why4'), t('contact.why5')].map((line) => (
+                  <li key={line} className="flex items-start space-x-3">
+                    <CheckCircle className="flex-shrink-0 mt-1" size={20} style={{color: '#78350F'}} />
+                    <span className="font-normal" style={{color: '#3a2f1f', fontFamily: 'var(--body-font)'}}>{line}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -176,16 +164,16 @@ export default function Contact() {
                 <div className="w-20 h-20 rounded-lg flex items-center justify-center mx-auto mb-6 beige-border soft-shadow" style={{backgroundColor: 'var(--beige-300)'}}>
                   <CheckCircle size={40} style={{color: 'var(--beige-700)'}} />
                 </div>
-                <h3 className="text-2xl font-black text-[#78350F] mb-4 uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>Thank You!</h3>
+                <h3 className="text-2xl font-black text-[#78350F] mb-4 uppercase tracking-wide" style={{fontFamily: 'var(--heading-font)'}}>{t('contact.thankYou')}</h3>
                 <p className="text-[#78350F] font-medium" style={{fontFamily: 'var(--heading-font)'}}>
-                  Your inquiry has been received. We'll get back to you within 24 hours.
+                  {t('contact.thankYouBody')}
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-bold mb-2" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>
-                    Full Name *
+                    {t('contact.name')}
                   </label>
                   <input
                     type="text"
@@ -198,13 +186,13 @@ export default function Contact() {
                     style={{backgroundColor: 'var(--beige-100)', borderColor: 'var(--beige-300)', color: '#3a2f1f'}}
                     onFocus={(e) => {e.currentTarget.style.borderColor = 'var(--beige-600)'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(212, 165, 116, 0.2)'}}
                     onBlur={(e) => {e.currentTarget.style.borderColor = 'var(--beige-300)'; e.currentTarget.style.boxShadow = 'none'}}
-                    placeholder="John Doe"
+                    placeholder={t('contact.placeholder.name')}
                   />
                 </div>
 
                 <div>
                   <label htmlFor="company" className="block text-sm font-bold mb-2" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>
-                    Company Name
+                    {t('contact.company')}
                   </label>
                   <input
                     type="text"
@@ -216,13 +204,13 @@ export default function Contact() {
                     style={{backgroundColor: 'var(--beige-100)', borderColor: 'var(--beige-300)', color: '#3a2f1f'}}
                     onFocus={(e) => {e.currentTarget.style.borderColor = 'var(--beige-600)'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(212, 165, 116, 0.2)'}}
                     onBlur={(e) => {e.currentTarget.style.borderColor = 'var(--beige-300)'; e.currentTarget.style.boxShadow = 'none'}}
-                    placeholder="Your Company"
+                    placeholder={t('contact.placeholder.company')}
                   />
                 </div>
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-bold mb-2" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>
-                    Email Address *
+                    {t('contact.email')}
                   </label>
                   <input
                     type="email"
@@ -242,18 +230,18 @@ export default function Contact() {
                       e.currentTarget.style.borderColor = 'var(--beige-300)';
                       e.currentTarget.style.boxShadow = 'none';
                     }}
-                    placeholder="john@example.com"
+                    placeholder={t('contact.placeholder.email')}
                   />
                   {emailTouched && formData.email.trim() && !isEmailValid ? (
                     <p className="mt-2 text-xs font-semibold text-red-700">
-                      Please enter a valid email address.
+                      {t('contact.error.emailInvalid')}
                     </p>
                   ) : null}
                 </div>
 
                 <div>
                   <label htmlFor="region" className="block text-sm font-bold mb-2" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>
-                    Region
+                    {t('contact.region')}
                   </label>
                   <select
                     id="region"
@@ -265,19 +253,19 @@ export default function Contact() {
                     onFocus={(e) => {e.currentTarget.style.borderColor = 'var(--beige-600)'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(212, 165, 116, 0.2)'}}
                     onBlur={(e) => {e.currentTarget.style.borderColor = 'var(--beige-300)'; e.currentTarget.style.boxShadow = 'none'}}
                   >
-                    <option value="">Select Region</option>
-                    <option value="EU">European Union</option>
-                    <option value="US">United States</option>
-                    <option value="APAC">Asia Pacific</option>
-                    <option value="ME">Middle East</option>
-                    <option value="India">India</option>
-                    <option value="Other">Other</option>
+                    <option value="">{t('contact.region.placeholder')}</option>
+                    <option value="EU">{t('contact.region.eu')}</option>
+                    <option value="US">{t('contact.region.us')}</option>
+                    <option value="APAC">{t('contact.region.apac')}</option>
+                    <option value="ME">{t('contact.region.me')}</option>
+                    <option value="India">{t('contact.region.india')}</option>
+                    <option value="Other">{t('contact.region.other')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label htmlFor="order_type" className="block text-sm font-bold mb-2" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>
-                    Order Type
+                    {t('contact.orderType')}
                   </label>
                   <select
                     id="order_type"
@@ -289,17 +277,17 @@ export default function Contact() {
                     onFocus={(e) => {e.currentTarget.style.borderColor = 'var(--beige-600)'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(212, 165, 116, 0.2)'}}
                     onBlur={(e) => {e.currentTarget.style.borderColor = 'var(--beige-300)'; e.currentTarget.style.boxShadow = 'none'}}
                   >
-                    <option value="">Select Order Type</option>
-                    <option value="sample">Sample Order</option>
-                    <option value="bulk">Bulk Order</option>
-                    <option value="custom">Custom/Branded</option>
-                    <option value="inquiry">General Inquiry</option>
+                    <option value="">{t('contact.order.placeholder')}</option>
+                    <option value="sample">{t('contact.order.sampleOrder')}</option>
+                    <option value="bulk">{t('contact.order.bulkOrder')}</option>
+                    <option value="custom">{t('contact.order.customBranded')}</option>
+                    <option value="inquiry">{t('contact.order.generalInquiry')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label htmlFor="message" className="block text-sm font-bold mb-2" style={{color: '#78350F', fontFamily: 'var(--heading-font)'}}>
-                    Tell us what you need *
+                    {t('contact.messageLabel')}
                   </label>
                   <textarea
                     id="message"
@@ -312,7 +300,7 @@ export default function Contact() {
                     style={{backgroundColor: 'var(--beige-100)', borderColor: 'var(--beige-300)', color: '#3a2f1f'}}
                     onFocus={(e) => {e.currentTarget.style.borderColor = 'var(--beige-600)'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(212, 165, 116, 0.2)'}}
                     onBlur={(e) => {e.currentTarget.style.borderColor = 'var(--beige-300)'; e.currentTarget.style.boxShadow = 'none'}}
-                    placeholder="Please describe your requirements..."
+                    placeholder={t('contact.placeholder.message')}
                   />
                 </div>
 
@@ -330,13 +318,13 @@ export default function Contact() {
                     opacity: !canSubmit ? 0.7 : 1,
                     cursor: !canSubmit ? 'not-allowed' : 'pointer',
                   }}
-                  aria-label="Send Inquiry"
+                  aria-label={t('contact.submit')}
                 >
                   {loading ? (
-                    <span>Sending...</span>
+                    <span>{t('contact.sending')}</span>
                   ) : (
                     <>
-                      <span>Send Inquiry</span>
+                      <span>{t('contact.submit')}</span>
                       <Send size={20} />
                     </>
                   )}

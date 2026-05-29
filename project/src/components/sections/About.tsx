@@ -1,6 +1,7 @@
 import { resolveMediaUrl } from '../../lib/api';
 import { Sparkles, Lightbulb, Rocket, Leaf, ShieldCheck, Globe2, HandHeart } from 'lucide-react';
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
+import { useI18n } from '../../contexts/I18nContext';
 import { IMG } from '../../lib/imageSizes';
 
 const mainContentHeaderColor = '#4A352F';
@@ -39,9 +40,10 @@ const storyFallback = {
 };
 
 export default function About() {
-  const { content: aboutContent } = useManagedSectionContent('about', aboutFallback);
-  const { content: missionContent } = useManagedSectionContent('about_mission', missionFallback);
-  const { content: storyContent } = useManagedSectionContent('about_story', storyFallback);
+  const { t } = useI18n();
+  const { content: aboutContent } = useLocalizedSectionContent('about', aboutFallback);
+  const { content: missionContent } = useLocalizedSectionContent('about_mission', missionFallback);
+  const { content: storyContent } = useLocalizedSectionContent('about_story', storyFallback);
 
   return (
     <section id="about" className="pt-8 sm:pt-10 md:pt-14 pb-16 bg-white">
@@ -73,7 +75,7 @@ export default function About() {
           <div className="min-w-0">
             <img
               src={resolveMediaUrl(String(aboutContent.image_left || aboutFallback.image_left))}
-              alt="Cottonunique organic cotton tote bags with GOTS certification"
+              alt={t('about.img.alt1')}
               className="w-full h-72 md:h-80 object-contain object-center -ml-4 lg:-ml-6"
               width={IMG.about.width}
               height={IMG.about.height}
@@ -85,7 +87,7 @@ export default function About() {
           <div className="space-y-6 lg:-mt-72 min-w-0">
             <img
               src={resolveMediaUrl(String(aboutContent.image_right || aboutFallback.image_right))}
-              alt="Cottonunique sustainable tote bags and certifications"
+              alt={t('about.img.alt2')}
               className="w-full h-80 md:h-96 object-cover object-center scale-95 -mt-8 lg:-mt-14"
               width={IMG.about.width}
               height={IMG.about.height}
@@ -99,7 +101,7 @@ export default function About() {
                     <Sparkles size={16} style={{ color: mainContentHeaderColor }} />
                   </div>
                   <h4 className={sectionHeadingClass} style={{ color: mainContentHeaderColor, fontFamily: 'var(--heading-font)' }}>
-                    Modern Elegance
+                    {t('about.modernElegance')}
                   </h4>
                 </div>
                 <p className="text-xs sm:text-sm leading-snug" style={{ fontFamily: 'var(--body-font)', color: '#2d2d2d' }}>
@@ -116,7 +118,7 @@ export default function About() {
                     <Lightbulb size={16} style={{ color: mainContentHeaderColor }} />
                   </div>
                   <h4 className={sectionHeadingClass} style={{ color: mainContentHeaderColor, fontFamily: 'var(--heading-font)' }}>
-                    Our Philosophy
+                    {t('about.ourPhilosophy')}
                   </h4>
                 </div>
                 <ul className="space-y-2 pl-10 list-none text-xs sm:text-sm" style={{ fontFamily: 'var(--body-font)', color: '#2d2d2d' }}>
@@ -126,7 +128,7 @@ export default function About() {
                   </li>
                   <li className={listItemClass}>
                     {bulletIcon}
-                    <span>Every tote bag is designed with care and attention to detail.</span>
+                    <span>{t('about.philosophy.bullet1')}</span>
                   </li>
                 </ul>
               </div>
@@ -140,7 +142,7 @@ export default function About() {
                     <Rocket size={16} style={{ color: mainContentHeaderColor }} />
                   </div>
                   <h4 className={sectionHeadingClass} style={{ color: mainContentHeaderColor, fontFamily: 'var(--heading-font)' }}>
-                    Our Mission
+                    {t('about.ourMission')}
                   </h4>
                 </div>
                 <ul className="space-y-2 pl-10 list-none text-xs sm:text-sm" style={{ fontFamily: 'var(--body-font)', color: '#2d2d2d' }}>
@@ -150,7 +152,7 @@ export default function About() {
                   </li>
                   <li className={listItemClass}>
                     {bulletIcon}
-                    <span>Ethically sourced, intelligently designed, and export-ready products.</span>
+                    <span>{t('about.mission.bullet2')}</span>
                   </li>
                 </ul>
               </div>
@@ -178,13 +180,13 @@ export default function About() {
               className="text-lg sm:text-xl font-bold mb-1 leading-tight"
               style={{ color: mainContentHeaderColor, fontFamily: 'var(--heading-font)' }}
             >
-              Sustainability First
+              {t('about.value.sustainability')}
             </h3>
             <p
               className="text-xs sm:text-sm max-w-[240px] mx-auto leading-snug"
               style={{ color: '#4A352F', fontFamily: 'var(--body-font)' }}
             >
-              100% organic cotton with GOTS certification.
+              {t('about.value.sustainability.desc')}
             </p>
           </div>
 
@@ -205,13 +207,13 @@ export default function About() {
               className="text-lg sm:text-xl font-bold mb-1 leading-tight"
               style={{ color: mainContentHeaderColor, fontFamily: 'var(--heading-font)' }}
             >
-              Quality Excellence
+              {t('about.value.quality')}
             </h3>
             <p
               className="text-xs sm:text-sm max-w-[240px] mx-auto leading-snug"
               style={{ color: '#4A352F', fontFamily: 'var(--body-font)' }}
             >
-              Premium materials and craftsmanship in every product.
+              {t('about.value.quality.desc')}
             </p>
           </div>
 
@@ -232,13 +234,13 @@ export default function About() {
               className="text-lg sm:text-xl font-bold mb-1 leading-tight"
               style={{ color: mainContentHeaderColor, fontFamily: 'var(--heading-font)' }}
             >
-              Export Ready
+              {t('about.value.export')}
             </h3>
             <p
               className="text-xs sm:text-sm max-w-[240px] mx-auto leading-snug"
               style={{ color: '#4A352F', fontFamily: 'var(--body-font)' }}
             >
-              Designed for international markets with consistent quality control.
+              {t('about.value.export.desc')}
             </p>
           </div>
 
@@ -259,13 +261,13 @@ export default function About() {
               className="text-lg sm:text-xl font-bold mb-1 leading-tight"
               style={{ color: mainContentHeaderColor, fontFamily: 'var(--heading-font)' }}
             >
-              Ethical Sourcing
+              {t('about.value.ethical')}
             </h3>
             <p
               className="text-xs sm:text-sm max-w-[240px] mx-auto leading-snug"
               style={{ color: '#4A352F', fontFamily: 'var(--body-font)' }}
             >
-              Fair, transparent supply chains from farm to finished tote.
+              {t('about.value.ethical.desc')}
             </p>
           </div>
         </div>

@@ -1,5 +1,7 @@
 import { Briefcase, Users, Building2, Heart, Calendar, FileCheck } from 'lucide-react';
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
+import { useI18n } from '../../contexts/I18nContext';
+import { corporateCopy, pickLocalized } from '../../i18n/staticSectionCopy';
 import Banner from './Banner';
 
 const corporateFallback = {
@@ -10,53 +12,25 @@ const corporateFallback = {
   image: '/images/corporate/image2.png',
 };
 
-export default function Corporate() {
-  const { content: corporateContent } = useManagedSectionContent('corporate', corporateFallback);
-  const services = [
-    {
-      icon: Briefcase,
-      title: 'Custom Logo Printing',
-      description: 'High-quality, eco-friendly printing with your brand identity',
-    },
-    {
-      icon: Users,
-      title: 'Co-branded Gifting Programs',
-      description: 'Collaborative designs that elevate your brand story',
-    },
-    {
-      icon: Building2,
-      title: 'White-label Export Support',
-      description: 'Complete documentation and compliance for global delivery',
-    },
-    {
-      icon: FileCheck,
-      title: 'ESG Sustainability Reports',
-      description: 'Detailed impact reports for your corporate sustainability goals',
-    },
-  ];
+const serviceIcons = [Briefcase, Users, Building2, FileCheck];
+const industryIcons = [Building2, Calendar, Briefcase, Heart];
 
-  const industries = [
-    {
-      icon: Building2,
-      name: 'Retail & Fashion',
-      description: 'Branded bags for stores, events, and customer appreciation',
-    },
-    {
-      icon: Calendar,
-      name: 'Hospitality & Events',
-      description: 'Premium welcome gifts and conference merchandise',
-    },
-    {
-      icon: Briefcase,
-      name: 'Tech & Startups',
-      description: 'Modern designs for onboarding kits and swag boxes',
-    },
-    {
-      icon: Heart,
-      name: 'NGOs & CSR Programs',
-      description: 'Ethical products that align with social impact initiatives',
-    },
-  ];
+export default function Corporate() {
+  const { effectiveLocale } = useI18n();
+  const { content: corporateContent } = useLocalizedSectionContent('corporate', corporateFallback);
+  const localized = pickLocalized(effectiveLocale, corporateCopy);
+
+  const services = localized.services.map((item, index) => ({
+    icon: serviceIcons[index] ?? Briefcase,
+    title: item.title,
+    description: item.description,
+  }));
+
+  const industries = localized.industries.map((item, index) => ({
+    icon: industryIcons[index] ?? Building2,
+    name: item.name,
+    description: item.description,
+  }));
 
   const scrollToContact = () => {
     const element = document.querySelector('#contact');
@@ -86,8 +60,8 @@ export default function Corporate() {
           <Banner
             bannerKey="corporate_banner"
             fallback={{
-              title: 'Corporate Solutions',
-              subtitle: 'Custom branding for global teams',
+              title: localized.banner.title,
+              subtitle: localized.banner.subtitle,
               image: '/images/corporate/image2.png',
             }}
             className="soft-shadow-lg"

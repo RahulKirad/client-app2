@@ -135,14 +135,20 @@ export function normalizeProducts(rows: unknown[]): Product[] {
 class ApiClient {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    
+    const method = (options?.method || 'GET').toUpperCase();
+    const headers: Record<string, string> = {
+      ...(options?.headers as Record<string, string> | undefined),
+    };
+    // JSON Content-Type on GET triggers a CORS preflight; omit for simple cross-origin reads.
+    if (method !== 'GET' && method !== 'HEAD' && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     try {
       const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        },
         ...options,
+        method,
+        headers,
       });
 
       if (!response.ok) {
@@ -203,10 +209,7 @@ class ApiClient {
   // Content
   async getContentSection(sectionKey: string): Promise<ContentSection> {
     const url = `${API_BASE_URL}/content/${encodeURIComponent(sectionKey)}?t=${Date.now()}`;
-    const res = await fetch(url, {
-      cache: 'no-store',
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     return await res.json();
   }
@@ -217,9 +220,20 @@ class ApiClient {
   }
 
   // Chatbot
+  async getSiteSettings(): Promise<{ languageToggleEnabled: boolean }> {
+    const url = `${API_BASE_URL}/site/settings?t=${Date.now()}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+    return {
+      languageToggleEnabled:
+        data.languageToggleEnabled === true || data.languageToggleEnabled === 1,
+    };
+  }
+
   async getChatbotSettings(): Promise<{ enabled: boolean; welcomeMessage: string | null }> {
     const url = `${API_BASE_URL}/chatbot/settings?t=${Date.now()}`;
-    const res = await fetch(url, { cache: 'no-store', headers: { 'Content-Type': 'application/json' } });
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
     return {

@@ -9,6 +9,7 @@ import RequestedSamplesManager from '../components/admin/RequestedSamplesManager
 import ContentManager from '../components/admin/ContentManager';
 import ChatbotControl from '../components/admin/ChatbotControl';
 import SmtpSettings from '../components/admin/SmtpSettings';
+import SiteSettings from '../components/admin/SiteSettings';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -77,6 +78,13 @@ export default function AdminRoutes() {
         <ProtectedRoute>
           <AdminLayout>
             <SmtpSettings />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/site-settings" element={
+        <ProtectedRoute>
+          <AdminLayout>
+            <SiteSettings />
           </AdminLayout>
         </ProtectedRoute>
       } />

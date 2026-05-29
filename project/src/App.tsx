@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import HomePage from './pages/HomePage';
 import AdminRoutes from './pages/AdminRoutes';
 import Chatbot from './components/Chatbot';
+import CookieConsentBanner from './components/CookieConsentBanner';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/admin/*" element={<AdminRoutes />} />
         </Routes>
         <Chatbot />
+        <CookieConsentBanner />
       </Router>
     </AuthProvider>
   );

@@ -18,6 +18,9 @@ async function getTransporterAndFrom() {
     if (!creds?.user || !creds?.pass) {
         throw new Error('SMTP not configured: set Email + App password in Admin → Email / SMTP, or set EMAIL_USER and EMAIL_APP_PASSWORD in the server environment');
     }
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`SMTP: sending as ${creds.user} (source: ${creds.source})`);
+    }
     const transporter = nodemailer_1.default.createTransport({
         host: SMTP_DEFAULT_HOST,
         port: SMTP_DEFAULT_PORT,
@@ -271,6 +274,10 @@ async function sendSampleRequestEmail(payload) {
     }
     catch (err) {
         console.error('Failed to send sample request email:', err);
+        const e = err;
+        if (e?.code === 'EAUTH' || e?.responseCode === 535) {
+            console.error('Gmail SMTP: bad credentials. Use a Google App Password (16 characters, not your normal Gmail password) for EMAIL_APP_PASSWORD in backend/.env, or re-save it under Admin → Email / SMTP.');
+        }
         return false;
     }
 }
