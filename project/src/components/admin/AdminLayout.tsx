@@ -11,7 +11,8 @@ import {
   X,
   User,
   MessageCircle,
-  Mail
+  Mail,
+  Globe
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -30,6 +31,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Inquiries', href: '/admin/inquiries', icon: MessageSquare },
     { name: 'Requested Samples', href: '/admin/sample-requests', icon: ClipboardList },
     { name: 'Content', href: '/admin/content', icon: FileText },
+    { name: 'Site Settings', href: '/admin/site-settings', icon: Globe },
     { name: 'Email / SMTP', href: '/admin/smtp', icon: Mail },
     { name: 'Chatbot Control', href: '/admin/chatbot', icon: MessageCircle },
   ];

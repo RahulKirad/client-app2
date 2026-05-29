@@ -21,6 +21,7 @@ import Contact from '../components/sections/Contact';
 import ProductsPage from './ProductsPage';
 import ProductDetailPage from './ProductDetailPage';
 import PrivacyPolicyPage from './PrivacyPolicyPage';
+import { useI18n } from '../contexts/I18nContext';
 
 const HOME_TITLE =
   'Cotton Tote Bags Manufacturer India | GOTS Certified | Cottonunique';
@@ -35,11 +36,13 @@ const HOME_H1 = 'Organic Cotton Tote Bag Manufacturer & Exporter — India';
 const HERO_LCP_PRELOAD = absoluteUrl(HERO_LCP_IMAGE_PATH);
 
 function MainPage() {
+  const { t } = useI18n();
+
   return (
     <div className="min-h-screen bg-white overflow-x-hidden w-full">
       <PageSeo
-        title={HOME_TITLE}
-        description={HOME_DESCRIPTION}
+        title={t('home.seo.title') || HOME_TITLE}
+        description={t('home.seo.description') || HOME_DESCRIPTION}
         keywords={HOME_KEYWORDS}
         jsonLd={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]}
         linkPreload={HERO_LCP_PRELOAD}
@@ -47,7 +50,7 @@ function MainPage() {
       <Header />
       <main>
         <div className="relative">
-          <h1 className="sr-only">{HOME_H1}</h1>
+          <h1 className="sr-only">{t('home.seo.h1') || HOME_H1}</h1>
           <Hero />
         </div>
         <About />

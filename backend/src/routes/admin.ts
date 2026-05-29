@@ -8,6 +8,10 @@ import fs from 'fs';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import mysql, { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { getSmtpSettingsForAdmin, saveSmtpSettings } from '../services/smtpConfigStore';
+import {
+  getSiteSettingsAdmin,
+  saveSiteSettings,
+} from '../services/siteSettingsStore';
 import { sendSmtpTestEmail } from '../services/email';
 import {
   coerceHeroSlidesArray,
@@ -1034,6 +1038,35 @@ router.put('/chatbot-settings', authenticateToken, async (req: AuthRequest, res)
   } catch (error) {
     console.error('Error updating chatbot settings:', error);
     res.status(500).json({ error: 'Failed to update chatbot settings' });
+  }
+});
+
+// ----- Site settings (language toggle visibility) -----
+router.get('/site-settings', authenticateToken, async (_req: AuthRequest, res) => {
+  try {
+    const data = await getSiteSettingsAdmin();
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching site settings:', error);
+    res.status(500).json({ error: 'Failed to fetch site settings' });
+  }
+});
+
+router.put('/site-settings', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { languageToggleEnabled } = req.body;
+    const enabled =
+      languageToggleEnabled === true ||
+      languageToggleEnabled === 1 ||
+      languageToggleEnabled === '1';
+    const saved = await saveSiteSettings({ languageToggleEnabled: enabled });
+    res.json({
+      message: 'Site settings updated successfully',
+      ...saved,
+    });
+  } catch (error) {
+    console.error('Error updating site settings:', error);
+    res.status(500).json({ error: 'Failed to update site settings' });
   }
 });
 

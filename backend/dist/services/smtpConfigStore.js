@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSmtpSettingsPool = getSmtpSettingsPool;
+exports.normalizeAppPassword = normalizeAppPassword;
 exports.encryptAppPassword = encryptAppPassword;
 exports.decryptAppPassword = decryptAppPassword;
 exports.ensureSmtpSettingsTable = ensureSmtpSettingsTable;
@@ -41,10 +42,28 @@ function getEncryptionKey() {
     const raw = process.env.JWT_SECRET || 'cotton-smtp-insecure-fallback';
     return crypto_1.default.createHash('sha256').update(raw, 'utf8').digest();
 }
+function normalizeAppPassword(raw) {
+    return raw.trim().replace(/^["']|["']$/g, '').replace(/\s+/g, '');
+}
+function envSmtpCredentials() {
+    const user = process.env.EMAIL_USER?.trim();
+    const pass = normalizeAppPassword(process.env.EMAIL_APP_PASSWORD || '');
+    if (!user || !pass)
+        return null;
+    return { user, pass, source: 'env' };
+}
+function preferEnvSmtp() {
+    const v = (process.env.SMTP_PREFER_ENV || '').trim().toLowerCase();
+    return v === '1' || v === 'true' || v === 'yes';
+}
+async function clearInvalidSmtpCiphertext(pool) {
+    await pool.execute(`UPDATE ${TABLE} SET app_password_ciphertext = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = 1`);
+}
 function encryptAppPassword(plain) {
+    const normalized = normalizeAppPassword(plain);
     const iv = crypto_1.default.randomBytes(16);
     const cipher = crypto_1.default.createCipheriv(ALGO, getEncryptionKey(), iv);
-    const enc = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
+    const enc = Buffer.concat([cipher.update(normalized, 'utf8'), cipher.final()]);
     const tag = cipher.getAuthTag();
     return [iv, tag, enc].map((b) => b.toString('base64')).join('.');
 }
@@ -58,7 +77,7 @@ function decryptAppPassword(data) {
     const enc = Buffer.from(encB, 'base64');
     const dec = crypto_1.default.createDecipheriv(ALGO, getEncryptionKey(), iv);
     dec.setAuthTag(tag);
-    return Buffer.concat([dec.update(enc), dec.final()]).toString('utf8');
+    return normalizeAppPassword(Buffer.concat([dec.update(enc), dec.final()]).toString('utf8'));
 }
 async function ensureSmtpSettingsTable(mysqlPool = getSmtpSettingsPool()) {
     await mysqlPool.execute(`
@@ -77,6 +96,10 @@ async function ensureSmtpSettingsTable(mysqlPool = getSmtpSettingsPool()) {
 async function getResolvedSmtpCredentials() {
     await ensureSmtpSettingsTable();
     const pool = getSmtpSettingsPool();
+    const fromEnv = envSmtpCredentials();
+    if (preferEnvSmtp() && fromEnv) {
+        return fromEnv;
+    }
     try {
         const [rows] = await pool.execute(`SELECT email_user, app_password_ciphertext FROM ${TABLE} WHERE id = 1`);
         const row = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
@@ -90,19 +113,19 @@ async function getResolvedSmtpCredentials() {
                 }
             }
             catch (e) {
-                console.error('smtp_settings: failed to decrypt stored app password, trying .env', e);
+                console.warn('smtp_settings: clearing invalid encrypted app password (re-save in Admin → Email / SMTP after fixing JWT_SECRET or password).', e.message);
+                await clearInvalidSmtpCiphertext(pool);
+                if (fromEnv) {
+                    console.warn(`smtp_settings: using EMAIL_USER from .env (${fromEnv.user})`);
+                    return fromEnv;
+                }
             }
         }
     }
     catch (e) {
         console.error('smtp_settings: read error', e);
     }
-    const envUser = process.env.EMAIL_USER?.trim();
-    const envPass = process.env.EMAIL_APP_PASSWORD?.trim();
-    if (envUser && envPass) {
-        return { user: envUser, pass: envPass, source: 'env' };
-    }
-    return null;
+    return fromEnv;
 }
 async function getSmtpSettingsForAdmin() {
     await ensureSmtpSettingsTable();

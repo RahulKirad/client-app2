@@ -1,10 +1,14 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 import { messages, type Locale } from '../i18n/messages';
+import { isGermanHostname } from '../lib/germanDomain';
 
 type Currency = 'EUR' | 'USD' | 'INR';
 
 type I18nContextValue = {
   locale: Locale;
+  /** German on cottonunique.de regardless of manual locale toggle. */
+  effectiveLocale: Locale;
+  isGermanDomain: boolean;
   setLocale: (l: Locale) => void;
   currency: Currency;
   setCurrency: (c: Currency) => void;
@@ -42,16 +46,29 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('cu_currency', c);
   };
 
-  const t = (key: string) => messages[locale][key] || messages.en[key] || key;
+  const isGermanDomain = isGermanHostname();
+  const effectiveLocale: Locale = isGermanDomain ? 'de' : locale;
+
+  const t = (key: string) =>
+    messages[effectiveLocale][key] || messages.en[key] || key;
 
   const domainHint =
-    locale === 'de'
+    effectiveLocale === 'de'
       ? 'Recommended domain: https://cottonunique.de'
       : 'Recommended domain: https://cottonunique.com';
 
   const value = useMemo(
-    () => ({ locale, setLocale, currency, setCurrency, t, domainHint }),
-    [locale, currency]
+    () => ({
+      locale,
+      effectiveLocale,
+      isGermanDomain,
+      setLocale,
+      currency,
+      setCurrency,
+      t,
+      domainHint,
+    }),
+    [locale, effectiveLocale, isGermanDomain, currency]
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
