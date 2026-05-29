@@ -13,6 +13,7 @@ const fs_1 = __importDefault(require("fs"));
 const auth_1 = require("../middleware/auth");
 const promise_1 = __importDefault(require("mysql2/promise"));
 const smtpConfigStore_1 = require("../services/smtpConfigStore");
+const siteSettingsStore_1 = require("../services/siteSettingsStore");
 const email_1 = require("../services/email");
 const contentNormalize_1 = require("../utils/contentNormalize");
 const slug_1 = require("../utils/slug");
@@ -912,6 +913,33 @@ router.put('/chatbot-settings', auth_1.authenticateToken, async (req, res) => {
     catch (error) {
         console.error('Error updating chatbot settings:', error);
         res.status(500).json({ error: 'Failed to update chatbot settings' });
+    }
+});
+router.get('/site-settings', auth_1.authenticateToken, async (_req, res) => {
+    try {
+        const data = await (0, siteSettingsStore_1.getSiteSettingsAdmin)();
+        res.json(data);
+    }
+    catch (error) {
+        console.error('Error fetching site settings:', error);
+        res.status(500).json({ error: 'Failed to fetch site settings' });
+    }
+});
+router.put('/site-settings', auth_1.authenticateToken, async (req, res) => {
+    try {
+        const { languageToggleEnabled } = req.body;
+        const enabled = languageToggleEnabled === true ||
+            languageToggleEnabled === 1 ||
+            languageToggleEnabled === '1';
+        const saved = await (0, siteSettingsStore_1.saveSiteSettings)({ languageToggleEnabled: enabled });
+        res.json({
+            message: 'Site settings updated successfully',
+            ...saved,
+        });
+    }
+    catch (error) {
+        console.error('Error updating site settings:', error);
+        res.status(500).json({ error: 'Failed to update site settings' });
     }
 });
 router.get('/smtp-settings', auth_1.authenticateToken, async (req, res) => {

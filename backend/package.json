@@ -4,8 +4,8 @@
   "description": "Backend API for Cottonunique e-commerce platform",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --exec \"ts-node src/index.ts\"",
-    "build": "echo 'Skipping server-side build - using pre-compiled dist/'",
+    "dev": "npx nodemon --exec \"npx ts-node src/index.ts\"",
+    "build": "npx tsc",
     "start": "node dist/index.js",
     "setup-db": "node scripts/setup-database.js"
   },

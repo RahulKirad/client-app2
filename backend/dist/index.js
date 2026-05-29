@@ -15,6 +15,7 @@ const chatbot_1 = __importDefault(require("./routes/chatbot"));
 const email_1 = require("./services/email");
 const contentNormalize_1 = require("./utils/contentNormalize");
 const slug_1 = require("./utils/slug");
+const siteSettingsStore_1 = require("./services/siteSettingsStore");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
 const CANONICAL_IN_PHONE_DISPLAY = '+91 7020631149';
@@ -48,24 +49,73 @@ function applyCanonicalContactPhones(content) {
     return next;
 }
 app.set('trust proxy', 1);
+const defaultAllowedOrigins = [
+    'https://cottonunique.com',
+    'https://www.cottonunique.com',
+    'https://cottonunique.de',
+    'https://www.cottonunique.de',
+    'https://app.cottonunique.com',
+    'http://localhost:5173',
+];
+function parseAllowedOrigins() {
+    const configured = (process.env.FRONTEND_URL || '')
+        .split(',')
+        .map((value) => value.trim().replace(/^['"]|['"]$/g, ''))
+        .filter(Boolean);
+    return [...new Set([...defaultAllowedOrigins, ...configured])];
+}
+const allowedOriginSet = new Set(parseAllowedOrigins());
+function isAllowedCorsOrigin(origin) {
+    if (allowedOriginSet.has(origin))
+        return true;
+    try {
+        const url = new URL(origin);
+        const host = url.hostname.toLowerCase().replace(/^www\./, '');
+        if (host === 'localhost') {
+            return url.protocol === 'http:' && url.port === '5173';
+        }
+        return (host === 'cottonunique.com' ||
+            host === 'cottonunique.de' ||
+            host.endsWith('.cottonunique.com') ||
+            host.endsWith('.cottonunique.de'));
+    }
+    catch {
+        return false;
+    }
+}
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL
-        ? process.env.FRONTEND_URL
-        : ['https://cottonunique.com', 'https://app.cottonunique.com', 'http://localhost:5173'],
+    origin(origin, callback) {
+        if (!origin) {
+            callback(null, true);
+            return;
+        }
+        if (isAllowedCorsOrigin(origin)) {
+            callback(null, origin);
+            return;
+        }
+        console.warn(`CORS blocked for origin: ${origin}`);
+        callback(null, false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express_1.default.json());
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
     max: 100,
     skip: (req) => {
+        if (req.method === 'OPTIONS')
+            return true;
         if (req.method !== 'GET')
             return false;
         if (req.path.startsWith('/content/'))
             return true;
         if (req.path === '/chatbot/settings')
+            return true;
+        if (req.path === '/site/settings')
+            return true;
+        if (req.path === '/products' || req.path.startsWith('/products/'))
             return true;
         return false;
     }
@@ -376,6 +426,18 @@ app.get('/api/chatbot/settings', async (req, res) => {
         res.json({ enabled: true, welcomeMessage: null });
     }
 });
+app.get('/api/site/settings', async (_req, res) => {
+    try {
+        const settings = await (0, siteSettingsStore_1.getSiteSettingsPublic)();
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        res.json(settings);
+    }
+    catch (error) {
+        console.error('Error fetching site settings:', error);
+        res.setHeader('Cache-Control', 'no-store');
+        res.json({ languageToggleEnabled: false });
+    }
+});
 app.get('/api/chatbot/visibility-diagnostics', async (req, res) => {
     try {
         await pool.execute(`
@@ -499,7 +561,8 @@ async function bootstrap() {
     await ensureSampleRequestsTable();
     app.listen(PORT, () => {
         console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+        console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || '(defaults only)'}`);
+        console.log(`🔒 CORS allowlist (${allowedOriginSet.size} entries) + *.cottonunique.com / *.cottonunique.de`);
         testConnection();
     });
 }

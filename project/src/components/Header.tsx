@@ -1,17 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingBag } from 'lucide-react';
 import { IMG } from '../lib/imageSizes';
+import { apiClient } from '../lib/api';
 import { useI18n } from '../contexts/I18nContext';
+import LanguageToggle from './LanguageToggle';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { locale, setLocale, t } = useI18n();
-  const isGermanDomain =
-    typeof window !== 'undefined' && window.location.hostname.endsWith('.de');
+  const { t } = useI18n();
   const isHomePage = location.pathname === '/';
+  const [showLanguageToggle, setShowLanguageToggle] = useState(false);
+
+  const loadSiteSettings = () => {
+    apiClient
+      .getSiteSettings()
+      .then((s) => setShowLanguageToggle(s.languageToggleEnabled))
+      .catch(() => setShowLanguageToggle(false));
+  };
+
+  useEffect(() => {
+    loadSiteSettings();
+    const onFocus = () => loadSiteSettings();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
 
   const navLinks = [
     { name: t('nav.home'), path: '#home', route: '/' },
@@ -114,12 +129,6 @@ export default function Header() {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300 bg-[var(--beige-600)]" aria-hidden />
               </button>
             ))}
-            {isGermanDomain ? (
-              <div className="flex items-center gap-2 text-xs border-l border-[var(--beige-300)] pl-3">
-                <button onClick={() => setLocale('en')} className={`px-2 py-1 rounded ${locale === 'en' ? 'bg-[var(--beige-200)]' : 'hover:bg-[var(--beige-100)]'}`}>EN</button>
-                <button onClick={() => setLocale('de')} className={`px-2 py-1 rounded ${locale === 'de' ? 'bg-[var(--beige-200)]' : 'hover:bg-[var(--beige-100)]'}`}>DE</button>
-              </div>
-            ) : null}
             <button
               onClick={() => scrollToSection('#contact')}
               className="px-6 py-2.5 rounded transition-all duration-200 flex items-center space-x-2 font-medium text-sm"
@@ -131,6 +140,7 @@ export default function Header() {
               <ShoppingBag size={18} aria-hidden />
               <span>{t('nav.getQuote')}</span>
             </button>
+            {showLanguageToggle ? <LanguageToggle /> : null}
           </nav>
 
           <button
@@ -166,10 +176,9 @@ export default function Header() {
               <ShoppingBag size={18} />
               <span>{t('nav.getQuote')}</span>
             </button>
-            {isGermanDomain ? (
-              <div className="flex items-center justify-start gap-2 pt-2">
-                <button onClick={() => setLocale('en')} className={`px-2 py-1 rounded text-xs ${locale === 'en' ? 'bg-[var(--beige-200)]' : 'bg-white border border-[var(--beige-300)]'}`}>EN</button>
-                <button onClick={() => setLocale('de')} className={`px-2 py-1 rounded text-xs ${locale === 'de' ? 'bg-[var(--beige-200)]' : 'bg-white border border-[var(--beige-300)]'}`}>DE</button>
+            {showLanguageToggle ? (
+              <div className="flex justify-end pt-2">
+                <LanguageToggle />
               </div>
             ) : null}
           </nav>

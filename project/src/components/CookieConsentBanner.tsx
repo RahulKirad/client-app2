@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../contexts/I18nContext';
 import {
@@ -9,11 +9,7 @@ import {
 } from '../lib/cookieConsent';
 
 export default function CookieConsentBanner() {
-  const { locale } = useI18n();
-  const isGermanDomain = useMemo(
-    () => typeof window !== 'undefined' && window.location.hostname.endsWith('.de'),
-    []
-  );
+  const { locale, isGermanDomain } = useI18n();
   const [visible, setVisible] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [analytics, setAnalytics] = useState(false);
