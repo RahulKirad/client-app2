@@ -14,18 +14,30 @@ export default function Header() {
   const isHomePage = location.pathname === '/';
   const [showLanguageToggle, setShowLanguageToggle] = useState(false);
 
-  const loadSiteSettings = () => {
+  useEffect(() => {
+    const cacheKey = 'cu_site_settings_v1';
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached) as { languageToggleEnabled?: boolean; at?: number };
+        if (parsed.at && Date.now() - parsed.at < 5 * 60 * 1000) {
+          setShowLanguageToggle(!!parsed.languageToggleEnabled);
+          return;
+        }
+      } catch {
+        /* ignore */
+      }
+    }
     apiClient
       .getSiteSettings()
-      .then((s) => setShowLanguageToggle(s.languageToggleEnabled))
+      .then((s) => {
+        setShowLanguageToggle(s.languageToggleEnabled);
+        sessionStorage.setItem(
+          cacheKey,
+          JSON.stringify({ languageToggleEnabled: s.languageToggleEnabled, at: Date.now() })
+        );
+      })
       .catch(() => setShowLanguageToggle(false));
-  };
-
-  useEffect(() => {
-    loadSiteSettings();
-    const onFocus = () => loadSiteSettings();
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   const navLinks = [

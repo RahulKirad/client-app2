@@ -117,20 +117,42 @@ app.use(
 );
 app.use(express.json());
 
-// Rate limiting (skip GET /chatbot/settings so chatbot polling doesn't hit limit)
+/** Path after /api — works whether Express gives mounted or full path. */
+function apiRequestPath(req: Request): string {
+  const raw = (req.originalUrl || req.url || req.path || '').split('?')[0];
+  const idx = raw.indexOf('/api');
+  const afterApi = idx >= 0 ? raw.slice(idx + 4) : raw;
+  return afterApi.startsWith('/') ? afterApi : `/${afterApi}`;
+}
+
+function isPublicCatalogGet(req: Request): boolean {
+  if (req.method !== 'GET') return false;
+  const p = apiRequestPath(req);
+  return (
+    p.startsWith('/content/') ||
+    p === '/site/settings' ||
+    p === '/chatbot/settings' ||
+    p === '/products' ||
+    p.startsWith('/products/') ||
+    p === '/health' ||
+    p === '/health/db'
+  );
+}
+
+const rateLimitWindowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10);
+const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX || '500', 10);
+
+// Rate limit writes + admin traffic; do not throttle public catalog GET (homepage loads many sections at once).
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: rateLimitWindowMs,
+  max: rateLimitMax,
+  standardHeaders: true,
+  legacyHeaders: false,
   skip: (req) => {
     if (req.method === 'OPTIONS') return true;
-    if (req.method !== 'GET') return false;
-    // Public content reads are cached client-side but can burst on page load (many sections).
-    if (req.path.startsWith('/content/')) return true;
-    if (req.path === '/chatbot/settings') return true;
-    if (req.path === '/site/settings') return true;
-    if (req.path === '/products' || req.path.startsWith('/products/')) return true;
+    if (isPublicCatalogGet(req)) return true;
     return false;
-  }
+  },
 });
 app.use('/api', limiter);
 
