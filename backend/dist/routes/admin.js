@@ -598,7 +598,14 @@ router.post('/products', auth_1.authenticateToken, upload.any(), async (req, res
 router.put('/products/:id', auth_1.authenticateToken, upload.any(), async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, category, description, material, print_type, packaging, moq, price, specifications, is_featured } = req.body;
+        const body = req.body || {};
+        const { name, category, description, material, print_type, packaging, moq, price, specifications, is_featured } = body;
+        if (!name || !category || !description) {
+            return res.status(400).json({
+                error: 'Name, category, and description are required',
+                hint: 'If fields look filled in the form, the upload may have failed to parse (check multipart Content-Type).',
+            });
+        }
         const specsStr = normalizeSpecifications(specifications);
         const [existingSlugRows] = await pool.execute('SELECT slug FROM products WHERE id = ? LIMIT 1', [id]);
         const existingSlug = Array.isArray(existingSlugRows) && existingSlugRows[0]?.slug
@@ -635,12 +642,28 @@ router.put('/products/:id', auth_1.authenticateToken, upload.any(), async (req, 
         }
         updateQuery += ' WHERE id = ?';
         queryParams.push(id);
-        await pool.execute(updateQuery, queryParams);
+        try {
+            await pool.execute(updateQuery, queryParams);
+        }
+        catch (updateErr) {
+            if (updateErr?.code === 'ER_BAD_FIELD_ERROR' && String(updateErr?.sqlMessage || '').includes('slug')) {
+                const fallbackQuery = updateQuery.replace(/slug = \?, /, '');
+                const fallbackParams = queryParams.slice(1);
+                await pool.execute(fallbackQuery, fallbackParams);
+            }
+            else {
+                throw updateErr;
+            }
+        }
         res.json({ message: 'Product updated successfully' });
     }
     catch (error) {
         console.error('Error updating product:', error);
-        res.status(500).json({ error: 'Failed to update product' });
+        const sqlMessage = error?.sqlMessage || '';
+        const message = error?.code === 'ER_INVALID_JSON' || sqlMessage.includes('JSON')
+            ? 'Invalid specifications format'
+            : sqlMessage || error?.message || 'Failed to update product';
+        res.status(500).json({ error: message, code: error?.code });
     }
 });
 router.delete('/products/:id', auth_1.authenticateToken, async (req, res) => {

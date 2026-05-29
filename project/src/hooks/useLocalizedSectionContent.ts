@@ -7,7 +7,7 @@ import {
 } from './useManagedSectionContent';
 
 /**
- * CMS section content with German text overlays on cottonunique.de (and when locale is de).
+ * CMS section content with German overlays when the active locale is de.
  */
 export function useLocalizedSectionContent<T extends Record<string, unknown>>(
   sectionKey: string,

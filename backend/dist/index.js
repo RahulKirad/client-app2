@@ -9,7 +9,6 @@ const crypto_1 = require("crypto");
 const cors_1 = __importDefault(require("cors"));
 const promise_1 = __importDefault(require("mysql2/promise"));
 const path_1 = __importDefault(require("path"));
-const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const admin_1 = __importDefault(require("./routes/admin"));
 const chatbot_1 = __importDefault(require("./routes/chatbot"));
 const email_1 = require("./services/email");
@@ -101,40 +100,6 @@ app.use((0, cors_1.default)({
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express_1.default.json());
-function apiRequestPath(req) {
-    const raw = (req.originalUrl || req.url || req.path || '').split('?')[0];
-    const idx = raw.indexOf('/api');
-    const afterApi = idx >= 0 ? raw.slice(idx + 4) : raw;
-    return afterApi.startsWith('/') ? afterApi : `/${afterApi}`;
-}
-function isPublicCatalogGet(req) {
-    if (req.method !== 'GET')
-        return false;
-    const p = apiRequestPath(req);
-    return (p.startsWith('/content/') ||
-        p === '/site/settings' ||
-        p === '/chatbot/settings' ||
-        p === '/products' ||
-        p.startsWith('/products/') ||
-        p === '/health' ||
-        p === '/health/db');
-}
-const rateLimitWindowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10);
-const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX || '500', 10);
-const limiter = (0, express_rate_limit_1.default)({
-    windowMs: rateLimitWindowMs,
-    max: rateLimitMax,
-    standardHeaders: true,
-    legacyHeaders: false,
-    skip: (req) => {
-        if (req.method === 'OPTIONS')
-            return true;
-        if (isPublicCatalogGet(req))
-            return true;
-        return false;
-    },
-});
-app.use('/api', limiter);
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
