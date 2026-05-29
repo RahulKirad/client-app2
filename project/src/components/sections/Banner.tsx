@@ -1,4 +1,4 @@
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
 import { IMG } from '../../lib/imageSizes';
 import { resolveMediaUrl } from '../../lib/api';
 import InternalAppLink from '../InternalAppLink';
@@ -49,7 +49,7 @@ const bannersFallback = {
 };
 
 export default function Banner({ bannerKey, fallback, className = '', showCTA = false }: BannerProps) {
-  const { content: bannersContent } = useManagedSectionContent('banners', bannersFallback);
+  const { content: bannersContent } = useLocalizedSectionContent('banners', bannersFallback);
   const bannerData = bannersContent[bannerKey] || fallback;
 
   return (

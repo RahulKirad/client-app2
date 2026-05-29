@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Mail, Phone } from 'lucide-react';
-import { useManagedSectionContent } from '../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../hooks/useLocalizedSectionContent';
 import { IMG } from '../lib/imageSizes';
 import { useI18n } from '../contexts/I18nContext';
 
@@ -11,7 +11,7 @@ export default function Footer() {
     email_primary: 'abhishek.deolalikar@gmail.com',
     phone: '+91 7020631149',
   };
-  const { content: contactInfo } = useManagedSectionContent('contact', contactFallback);
+  const { content: contactInfo } = useLocalizedSectionContent('contact', contactFallback);
 
   return (
     <footer
@@ -36,18 +36,18 @@ export default function Footer() {
               />
             </div>
             <p className="text-white/90 text-sm leading-relaxed font-medium" style={{fontFamily: 'var(--heading-font)'}}>
-              Premium sustainable tote bags that meet the highest global standards—ethically sourced, intelligently designed, and export-ready.
+              {t('footer.tagline')}
             </p>
           </div>
 
           <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-            <h3 className="font-black text-lg mb-4 text-white uppercase tracking-wide transform transition-all duration-300 hover:translate-x-2" style={{fontFamily: 'var(--heading-font)'}}>Quick Links</h3>
+            <h3 className="font-black text-lg mb-4 text-white uppercase tracking-wide transform transition-all duration-300 hover:translate-x-2" style={{fontFamily: 'var(--heading-font)'}}>{t('footer.quickLinks')}</h3>
             <ul className="space-y-2">
               {[
-                { name: 'About Us', href: '/#about' },
-                { name: 'Products', href: '/#products' },
-                { name: 'Corporate Solutions', href: '/#corporate' },
-                { name: 'Sustainability', href: '/#sustainability' }
+                { name: t('nav.about'), href: '/#about' },
+                { name: t('nav.products'), href: '/#products' },
+                { name: t('nav.corporate'), href: '/#corporate' },
+                { name: t('nav.sustainability'), href: '/#sustainability' }
               ].map((link, index) => (
                 <li key={link.name} className="transform transition-all duration-300 hover:translate-x-2" style={{animationDelay: `${0.3 + index * 0.1}s`}}>
                   <Link 
@@ -64,13 +64,13 @@ export default function Footer() {
           </div>
 
           <div className="animate-fade-in-up" style={{animationDelay: '0.3s'}}>
-            <h3 className="font-black text-lg mb-4 text-white uppercase tracking-wide transform transition-all duration-300 hover:translate-x-2" style={{fontFamily: 'var(--heading-font)'}}>Certifications</h3>
+            <h3 className="font-black text-lg mb-4 text-white uppercase tracking-wide transform transition-all duration-300 hover:translate-x-2" style={{fontFamily: 'var(--heading-font)'}}>{t('footer.certifications')}</h3>
             <ul className="space-y-2 text-white/90">
               {[
-                'GOTS Certified',
-                'FSC Compliant',
-                'MSME Registered',
-                'Export Compliant'
+                t('footer.cert.gots'),
+                t('footer.cert.fsc'),
+                t('footer.cert.msme'),
+                t('footer.cert.export')
               ].map((cert, index) => (
                 <li 
                   key={cert} 
@@ -85,7 +85,7 @@ export default function Footer() {
           </div>
 
           <div className="animate-fade-in-up" style={{animationDelay: '0.4s'}}>
-            <h3 className="font-black text-lg mb-4 text-white uppercase tracking-wide transform transition-all duration-300 hover:translate-x-2" style={{fontFamily: 'var(--heading-font)'}}>Contact Info</h3>
+            <h3 className="font-black text-lg mb-4 text-white uppercase tracking-wide transform transition-all duration-300 hover:translate-x-2" style={{fontFamily: 'var(--heading-font)'}}>{t('footer.contactInfo')}</h3>
             <ul className="space-y-3 text-white/90">
               <li className="flex items-start space-x-2 group transform transition-all duration-300 hover:translate-x-2">
                 <Mail size={18} className="mt-1 flex-shrink-0 text-[#FBBF24] transform transition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
@@ -107,13 +107,12 @@ export default function Footer() {
           className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-4xl mb-8 animate-fade-in-up"
           style={{ fontFamily: 'var(--body-font)' }}
         >
-          Cottonunique supplies sustainable cotton tote bags wholesale to corporates, NGOs, and global
-          exporters from India.
+          {t('footer.wholesale')}
         </p>
 
         <div className="border-t-2 border-white/30 pt-8 flex flex-col md:flex-row justify-between items-center animate-fade-in-up" style={{animationDelay: '0.6s'}}>
           <p className="text-white/90 text-sm font-medium transform transition-all duration-300 hover:scale-105" style={{fontFamily: 'var(--heading-font)'}}>
-            © {currentYear} Cottonunique. All rights reserved.
+            © {currentYear} Cottonunique. {t('footer.rights')}
           </p>
           <div className="flex flex-wrap gap-4 mt-4 md:mt-0 justify-center md:justify-end">
             <Link 

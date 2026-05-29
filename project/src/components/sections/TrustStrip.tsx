@@ -1,5 +1,5 @@
 import { Award, ShieldCheck, Leaf, Globe } from 'lucide-react';
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
 
 const items = [
   { icon: Leaf, label: 'GOTS Certified' },
@@ -14,7 +14,7 @@ const trustFallback = {
 };
 
 export default function TrustStrip() {
-  const { content: trustContent } = useManagedSectionContent('trust_strip', trustFallback);
+  const { content: trustContent } = useLocalizedSectionContent('trust_strip', trustFallback);
   const labels =
     Array.isArray(trustContent.items) && trustContent.items.length > 0
       ? trustContent.items.map((item) => String(item))

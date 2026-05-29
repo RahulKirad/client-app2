@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { apiClient, Product, normalizeProducts } from '../../lib/api';
 import ProductCarousel from '../ui/ProductCarousel';
 import SampleRequestModal from '../SampleRequestModal';
-import { useManagedSectionContent } from '../../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
+import { useI18n } from '../../contexts/I18nContext';
 
 const productsHomeFallback = {
   heading: 'Organic Cotton Tote Bags for Every Market',
@@ -25,7 +26,8 @@ function shuffleInPlace<T>(items: T[]): T[] {
 }
 
 export default function Products() {
-  const { content: sectionContent } = useManagedSectionContent('products_home', productsHomeFallback);
+  const { t } = useI18n();
+  const { content: sectionContent } = useLocalizedSectionContent('products_home', productsHomeFallback);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [sampleProduct, setSampleProduct] = useState<Product | null>(null);
@@ -97,7 +99,7 @@ export default function Products() {
             onClick={scrollToContact}
             className="btn-cta-primary flex items-center justify-center space-x-2"
             style={{backgroundColor: 'var(--beige-700)', color: 'white', border: '2px solid var(--beige-800)', borderColor: 'var(--beige-800)'}}
-            aria-label="Request Samples"
+            aria-label={t('products.requestSamples')}
             onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = 'var(--beige-800)'; e.currentTarget.style.borderColor = 'var(--beige-900)'}}
             onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = 'var(--beige-700)'; e.currentTarget.style.borderColor = 'var(--beige-800)'}}
           >

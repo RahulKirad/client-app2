@@ -1,16 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, User } from 'lucide-react';
 import { apiClient } from '../lib/api';
-import { useManagedSectionContent } from '../hooks/useManagedSectionContent';
+import { useLocalizedSectionContent } from '../hooks/useLocalizedSectionContent';
+import { useI18n } from '../contexts/I18nContext';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
 }
-
-const DEFAULT_WELCOME =
-  "Hi! I'm the Cottonunique assistant. I can help with our sustainable tote bags, GOTS certification, ordering (samples, bulk, custom), and how to get in touch. What would you like to know?";
 
 const contactFallback = {
   phone: '+91 7020631149',
@@ -32,7 +30,8 @@ function buildWhatsAppUrl(numberRaw: string, message: string): string | null {
 }
 
 export default function Chatbot() {
-  const { content: contact } = useManagedSectionContent('contact', contactFallback);
+  const { t } = useI18n();
+  const { content: contact } = useLocalizedSectionContent('contact', contactFallback);
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,12 +45,12 @@ export default function Chatbot() {
       const nextEnabled = s.enabled === true;
       setEnabled(nextEnabled);
       if (!nextEnabled) setIsOpen(false);
-      const welcome = s.welcomeMessage?.trim() || DEFAULT_WELCOME;
+      const welcome = s.welcomeMessage?.trim() || t('chatbot.welcome');
       setMessages((prev) => (prev.length === 0 ? [{ role: 'assistant', content: welcome, timestamp: new Date().toISOString() }] : prev));
     }).catch(() => {
       setEnabled(false);
       setIsOpen(false);
-      setMessages((prev) => (prev.length === 0 ? [{ role: 'assistant', content: DEFAULT_WELCOME, timestamp: new Date().toISOString() }] : prev));
+      setMessages((prev) => (prev.length === 0 ? [{ role: 'assistant', content: t('chatbot.welcome'), timestamp: new Date().toISOString() }] : prev));
     });
   };
 
@@ -205,7 +204,7 @@ export default function Chatbot() {
                 height={32}
                 loading="lazy"
               />
-              <h3 className="font-semibold text-base sm:text-lg truncate min-w-0">Cottonunique Assistant</h3>
+              <h3 className="font-semibold text-base sm:text-lg truncate min-w-0">{t('chatbot.title')}</h3>
             </div>
             <button
               onClick={() => setIsOpen(false)}
@@ -271,7 +270,7 @@ export default function Chatbot() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder={t('chatbot.placeholder')}
                 disabled={loading}
                 className="flex-1 px-4 py-2 border-2 border-[#C8E6C9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7CB342] focus:border-[#7CB342] text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed placeholder:text-gray-400"
               />
@@ -280,7 +279,7 @@ export default function Chatbot() {
                 disabled={!input.trim() || loading}
                 className="text-white rounded-lg px-4 py-2 transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 style={{ backgroundColor: '#7CB342' }}
-                aria-label="Send message"
+                aria-label={t('chatbot.send')}
               >
                 <Send size={18} />
               </button>

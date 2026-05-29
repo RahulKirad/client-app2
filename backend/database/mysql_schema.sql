@@ -105,6 +105,15 @@ CREATE TABLE IF NOT EXISTS chatbot_settings (
 INSERT IGNORE INTO chatbot_settings (id, is_enabled, welcome_message) VALUES
 (1, 1, NULL);
 
+-- Global site options (language switcher on header for .com and .de)
+CREATE TABLE IF NOT EXISTS site_settings (
+    id INT PRIMARY KEY DEFAULT 1,
+    language_toggle_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO site_settings (id, language_toggle_enabled) VALUES (1, 0);
+
 -- SMTP credentials for contact-form email (admin UI); optional, server can also use .env
 CREATE TABLE IF NOT EXISTS smtp_settings (
     id INT PRIMARY KEY DEFAULT 1,
