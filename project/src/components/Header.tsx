@@ -10,22 +10,36 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, isGermanDomain } = useI18n();
   const isHomePage = location.pathname === '/';
   const [showLanguageToggle, setShowLanguageToggle] = useState(false);
-
-  const loadSiteSettings = () => {
-    apiClient
-      .getSiteSettings()
-      .then((s) => setShowLanguageToggle(s.languageToggleEnabled))
-      .catch(() => setShowLanguageToggle(false));
-  };
+  const canShowLanguageToggle =
+    showLanguageToggle || isGermanDomain || import.meta.env.DEV;
 
   useEffect(() => {
-    loadSiteSettings();
-    const onFocus = () => loadSiteSettings();
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
+    const cacheKey = 'cu_site_settings_v1';
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached) as { languageToggleEnabled?: boolean; at?: number };
+        if (parsed.at && Date.now() - parsed.at < 5 * 60 * 1000) {
+          setShowLanguageToggle(!!parsed.languageToggleEnabled);
+          return;
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    apiClient
+      .getSiteSettings()
+      .then((s) => {
+        setShowLanguageToggle(s.languageToggleEnabled);
+        sessionStorage.setItem(
+          cacheKey,
+          JSON.stringify({ languageToggleEnabled: s.languageToggleEnabled, at: Date.now() })
+        );
+      })
+      .catch(() => setShowLanguageToggle(false));
   }, []);
 
   const navLinks = [
@@ -140,8 +154,14 @@ export default function Header() {
               <ShoppingBag size={18} aria-hidden />
               <span>{t('nav.getQuote')}</span>
             </button>
-            {showLanguageToggle ? <LanguageToggle /> : null}
+            {canShowLanguageToggle ? <LanguageToggle /> : null}
           </nav>
+
+          {canShowLanguageToggle ? (
+            <div className="lg:hidden flex items-center shrink-0 mr-1">
+              <LanguageToggle />
+            </div>
+          ) : null}
 
           <button
             type="button"
@@ -176,8 +196,8 @@ export default function Header() {
               <ShoppingBag size={18} />
               <span>{t('nav.getQuote')}</span>
             </button>
-            {showLanguageToggle ? (
-              <div className="flex justify-end pt-2">
+            {canShowLanguageToggle ? (
+              <div className="flex justify-center pt-4 pb-1">
                 <LanguageToggle />
               </div>
             ) : null}
