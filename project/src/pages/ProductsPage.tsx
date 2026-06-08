@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, ShoppingBag, Filter, Grid, List, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ArrowLeft, Package, ShoppingBag, Filter, Grid, List, ChevronLeft, ChevronRight, ChevronDown, Search } from 'lucide-react';
 import { apiClient, Product, normalizeProducts, resolveMediaUrl } from '../lib/api';
 import PageSeo from '../components/PageSeo';
 import { IMG } from '../lib/imageSizes';
@@ -10,8 +10,118 @@ import { htmlToPlainText } from '../lib/productDescriptionHtml';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SampleRequestModal from '../components/SampleRequestModal';
+import { useI18n } from '../contexts/I18nContext';
+import { localizeProduct } from '../lib/localizeProduct';
 
-const PRODUCTS_PER_PAGE = 10;
+const PRODUCTS_PER_PAGE = 8;
+
+type CategoryKey =
+  | 'All'
+  | 'Classic Cotton Totes'
+  | 'Foldable Travel Totes'
+  | 'Branded Corporate Totes'
+  | 'Seasonal Gift Editions';
+
+const CATEGORY_OPTIONS: { value: CategoryKey }[] = [
+  { value: 'All' },
+  { value: 'Classic Cotton Totes' },
+  { value: 'Foldable Travel Totes' },
+  { value: 'Branded Corporate Totes' },
+  { value: 'Seasonal Gift Editions' },
+];
+
+const productsPageCopy = {
+  en: {
+    backHome: 'Back to Home',
+    backShort: 'Back',
+    title: 'Products',
+    catalogView: 'Catalog Management View',
+    searchLabel: 'Search products',
+    searchPlaceholder:
+      'Search products — name, material, MOQ, specs, or any word (matches whole catalog)',
+    searchHint:
+      'Type a word to jump to results below. If only one product matches, press Enter to open it.',
+    filterByCategory: 'Filter by category',
+    filters: 'Filters',
+    showFilters: 'Show filters',
+    hideFilters: 'Hide filters',
+    sortNewest: 'Newest First',
+    sortName: 'Name A-Z',
+    sortNameDesc: 'Name Z-A',
+    sortPrice: 'Price Low-High',
+    sortPriceDesc: 'Price High-Low',
+    sortFeatured: 'Featured First',
+    showingZero: 'Showing 0 products',
+    showingRange: (from: number, to: number, total: number) =>
+      `Showing ${from}–${to} of ${total} products`,
+    pageOf: (page: number, totalPages: number) => ` · Page ${page} of ${totalPages}`,
+    noProducts: 'No products found',
+    noProductsHint: 'Try adjusting your filters or search to see more products.',
+    paginationLabel: 'Product list pagination',
+    previous: 'Previous',
+    next: 'Next',
+    pageAria: (page: number) => `Page ${page}`,
+    ctaTitle: 'Ready to Place Your Order?',
+    ctaBody: 'Contact us for samples, custom branding, or bulk orders',
+    ctaButton: 'Get in Touch',
+    requestSample: 'Request Sample',
+    seoTitle: 'Sustainable Tote Bags Catalog & Wholesale MOQs',
+    seoDescription:
+      'Browse Cottonunique GOTS-certified tote bags: classic cotton totes, foldable travel bags, corporate branding, and seasonal gift editions. Request samples or bulk quotes.',
+    categories: {
+      All: 'All',
+      'Classic Cotton Totes': 'Classic Cotton Totes',
+      'Foldable Travel Totes': 'Foldable Travel Totes',
+      'Branded Corporate Totes': 'Branded Corporate Totes',
+      'Seasonal Gift Editions': 'Seasonal Gift Editions',
+    } satisfies Record<CategoryKey, string>,
+  },
+  de: {
+    backHome: 'Zurück zur Startseite',
+    backShort: 'Zurück',
+    title: 'Produkte',
+    catalogView: 'Katalogansicht',
+    searchLabel: 'Produkte suchen',
+    searchPlaceholder:
+      'Produkte suchen — Name, Material, MOQ, Spezifikationen oder ein beliebiges Wort (durchsucht den gesamten Katalog)',
+    searchHint:
+      'Geben Sie ein Wort ein, um zu den Ergebnissen zu springen. Wenn nur ein Produkt passt, drücken Sie Enter, um es zu öffnen.',
+    filterByCategory: 'Nach Kategorie filtern',
+    filters: 'Filter',
+    showFilters: 'Filter anzeigen',
+    hideFilters: 'Filter ausblenden',
+    sortNewest: 'Neueste zuerst',
+    sortName: 'Name A-Z',
+    sortNameDesc: 'Name Z-A',
+    sortPrice: 'Preis aufsteigend',
+    sortPriceDesc: 'Preis absteigend',
+    sortFeatured: 'Empfohlene zuerst',
+    showingZero: '0 Produkte angezeigt',
+    showingRange: (from: number, to: number, total: number) =>
+      `Zeige ${from}–${to} von ${total} Produkten`,
+    pageOf: (page: number, totalPages: number) => ` · Seite ${page} von ${totalPages}`,
+    noProducts: 'Keine Produkte gefunden',
+    noProductsHint: 'Passen Sie Filter oder Suche an, um mehr Produkte zu sehen.',
+    paginationLabel: 'Seitennavigation der Produktliste',
+    previous: 'Zurück',
+    next: 'Weiter',
+    pageAria: (page: number) => `Seite ${page}`,
+    ctaTitle: 'Bereit, Ihre Bestellung aufzugeben?',
+    ctaBody: 'Kontaktieren Sie uns für Muster, individuelles Branding oder Großbestellungen',
+    ctaButton: 'Kontakt aufnehmen',
+    requestSample: 'Muster anfordern',
+    seoTitle: 'Nachhaltige Tragetaschen – Katalog & Großhandels-MOQs',
+    seoDescription:
+      'Entdecken Sie GOTS-zertifizierte Cottonunique Tragetaschen: klassische Baumwolltaschen, faltbare Reisetaschen, Unternehmens-Branding und saisonale Geschenkeditionen. Muster oder Großmengen-Angebote anfragen.',
+    categories: {
+      All: 'Alle',
+      'Classic Cotton Totes': 'Klassische Baumwolltaschen',
+      'Foldable Travel Totes': 'Faltbare Reisetaschen',
+      'Branded Corporate Totes': 'Gebrandete Unternehmenstaschen',
+      'Seasonal Gift Editions': 'Saisonale Geschenkeditionen',
+    } satisfies Record<CategoryKey, string>,
+  },
+};
 
 /** All searchable text for a product (name, fields, specs, price). */
 function productSearchHaystack(p: Product): string {
@@ -25,12 +135,19 @@ function productSearchHaystack(p: Product): string {
   }
   const parts = [
     p.name,
+    p.name_de,
     htmlToPlainText(p.description),
+    p.description_de ? htmlToPlainText(p.description_de) : '',
     p.category,
+    p.category_de,
     p.material,
+    p.material_de,
     p.print_type,
+    p.print_type_de,
     p.packaging,
+    p.packaging_de,
     p.moq,
+    p.moq_de,
     String(p.price),
     specText,
   ];
@@ -71,24 +188,34 @@ function productMatchesSearchQuery(p: Product, rawQuery: string): boolean {
 
 export default function ProductsPage() {
   const navigate = useNavigate();
+  const { effectiveLocale, t } = useI18n();
+  const copy = productsPageCopy[effectiveLocale];
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<string>('newest');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [sampleProduct, setSampleProduct] = useState<Product | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const categories = ['All', 'Classic Cotton Totes', 'Foldable Travel Totes', 'Branded Corporate Totes', 'Seasonal Gift Editions'];
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) {
+      setFiltersOpen(true);
+    }
+  }, []);
+
   const sortOptions = [
-    { value: 'newest', label: 'Newest First' },
-    { value: 'name', label: 'Name A-Z' },
-    { value: 'name_desc', label: 'Name Z-A' },
-    { value: 'price', label: 'Price Low-High' },
-    { value: 'price_desc', label: 'Price High-Low' },
-    { value: 'featured', label: 'Featured First' }
+    { value: 'newest', label: copy.sortNewest },
+    { value: 'name', label: copy.sortName },
+    { value: 'name_desc', label: copy.sortNameDesc },
+    { value: 'price', label: copy.sortPrice },
+    { value: 'price_desc', label: copy.sortPriceDesc },
+    { value: 'featured', label: copy.sortFeatured },
   ];
+
+  const requestSampleLabel = t('products.requestSamples') || copy.requestSample;
 
   useEffect(() => {
     fetchProducts();
@@ -158,7 +285,9 @@ export default function ProductsPage() {
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedProducts.length / PRODUCTS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
   const pageStart = (safePage - 1) * PRODUCTS_PER_PAGE;
-  const paginatedProducts = filteredAndSortedProducts.slice(pageStart, pageStart + PRODUCTS_PER_PAGE);
+  const paginatedProducts = filteredAndSortedProducts
+    .slice(pageStart, pageStart + PRODUCTS_PER_PAGE)
+    .map((p) => localizeProduct(p, effectiveLocale));
 
   useEffect(() => {
     setCurrentPage(1);
@@ -183,11 +312,8 @@ export default function ProductsPage() {
     }
   };
 
-  const productsTitle = buildTitle('Sustainable Tote Bags Catalog & Wholesale MOQs');
-  const productsDescription = truncateMeta(
-    'Browse Cottonunique GOTS-certified tote bags: classic cotton totes, foldable travel bags, corporate branding, and seasonal gift editions. Request samples or bulk quotes.',
-    160
-  );
+  const productsTitle = buildTitle(copy.seoTitle);
+  const productsDescription = truncateMeta(copy.seoDescription, 160);
 
   return (
     <div className="min-h-screen bg-white">
@@ -197,24 +323,28 @@ export default function ProductsPage() {
       <main className="pt-20 bg-slate-50">
         {/* Top Bar */}
         <section className="bg-white border-b border-gray-200 py-5">
-          <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+          <div className="relative flex min-h-[2.75rem] w-full items-center justify-between gap-4 px-4 sm:min-h-0 sm:px-6 lg:px-8">
             <Link
               to="/"
-              className="inline-flex items-center transition-colors font-semibold text-sm bg-white px-4 py-2 rounded-full border-2 shadow-sm hover:shadow-md"
+              className="relative z-10 inline-flex shrink-0 items-center transition-colors font-semibold text-sm bg-white px-3 py-2 rounded-full border-2 shadow-sm hover:shadow-md sm:px-4"
               style={{color: 'var(--beige-700)', borderColor: 'var(--beige-600)'}}
               onMouseEnter={(e) => e.currentTarget.style.color = 'var(--beige-800)'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'var(--beige-700)'}
             >
-              <ArrowLeft size={18} className="mr-2" />
-              Back to Home
+              <ArrowLeft size={18} className="mr-2 hidden sm:inline" aria-hidden />
+              <span className="sm:hidden">{copy.backShort}</span>
+              <span className="hidden sm:inline">{copy.backHome}</span>
             </Link>
 
-            <h1 className="text-xl sm:text-2xl font-bold text-[#2C3E50] tracking-tight" style={{fontFamily: 'var(--heading-font)'}}>
-              Products
+            <h1
+              className="pointer-events-none absolute left-1/2 top-1/2 w-max max-w-[calc(100%-7rem)] -translate-x-1/2 -translate-y-1/2 text-center text-xl font-bold tracking-tight text-[#2C3E50] sm:pointer-events-auto sm:static sm:max-w-none sm:translate-x-0 sm:translate-y-0 sm:text-left sm:text-2xl"
+              style={{ fontFamily: 'var(--heading-font)' }}
+            >
+              {t('nav.products') || copy.title}
             </h1>
 
-            <div className="hidden sm:block text-sm text-[#5A6C7D] font-medium">
-              Catalog Management View
+            <div className="hidden shrink-0 text-sm font-medium text-[#5A6C7D] sm:block">
+              {copy.catalogView}
             </div>
           </div>
         </section>
@@ -224,12 +354,12 @@ export default function ProductsPage() {
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="mb-6 w-full">
               <label htmlFor="products-search" className="sr-only">
-                Search products
+                {copy.searchLabel}
               </label>
               <div className="relative w-full">
                 <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#5A6C7D]"
-                  size={22}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#5A6C7D] sm:left-4"
+                  size={18}
                   aria-hidden
                 />
                 <input
@@ -238,8 +368,8 @@ export default function ProductsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearchKeyDown}
-                  placeholder="Search products — name, material, MOQ, specs, or any word (matches whole catalog)"
-                  className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 text-base font-medium text-[#2C3E50] bg-gray-50/80 placeholder:text-[#6B7280] transition-all duration-200 focus:outline-none focus:bg-white"
+                  placeholder={copy.searchPlaceholder}
+                  className="w-full rounded-xl border-2 border-gray-200 bg-gray-50/80 py-2.5 pl-10 pr-3 text-sm font-medium text-[#2C3E50] placeholder:text-[#6B7280] transition-all duration-200 focus:outline-none focus:bg-white sm:py-3.5 sm:pl-12 sm:pr-4 sm:text-base"
                   style={{ boxShadow: 'none' }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = 'var(--beige-600)';
@@ -253,83 +383,138 @@ export default function ProductsPage() {
                   spellCheck="false"
                 />
               </div>
-              <p className="mt-2 text-xs text-[#5A6C7D]">
-                Type a word to jump to results below. If only one product matches, press Enter to open it.
-              </p>
             </div>
 
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              {/* Category Filter */}
-              <div className="flex items-center space-x-4">
-                <Filter size={20} style={{color: 'var(--beige-700)'}} />
-                <div className="flex flex-wrap gap-2">
-                  {categories.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`px-4 py-2 rounded-full font-semibold transition-all duration-300 text-sm ${
-                        selectedCategory === category
-                          ? 'text-white shadow-lg'
-                          : 'bg-gray-100 text-[#2C3E50] hover:bg-gray-200'
-                      }`}
-                      style={selectedCategory === category ? {backgroundColor: 'var(--beige-600)'} : {}}
-                    >
-                      {category}
-                    </button>
-                  ))}
+            {/* Filters panel (collapsible: categories, sort, view) */}
+            <div className="w-full">
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((open) => !open)}
+                className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-2 text-left transition-colors hover:bg-gray-100"
+                aria-expanded={filtersOpen}
+                aria-controls="products-filters-panel"
+              >
+                <span className="flex min-w-0 flex-wrap items-center gap-2">
+                  <Filter size={16} className="shrink-0" style={{ color: 'var(--beige-700)' }} aria-hidden />
+                  <span className="text-sm font-semibold text-[#2C3E50]">{copy.filters}</span>
+                  {!filtersOpen ? (
+                    <>
+                      {selectedCategory !== 'All' ? (
+                        <span
+                          className="max-w-[8rem] truncate rounded-full px-2 py-0.5 text-[10px] font-semibold text-white sm:max-w-none sm:text-xs"
+                          style={{ backgroundColor: 'var(--beige-600)' }}
+                        >
+                          {copy.categories[selectedCategory]}
+                        </span>
+                      ) : null}
+                      <span className="truncate text-[10px] font-medium text-[#5A6C7D] sm:text-xs">
+                        {sortOptions.find((o) => o.value === sortBy)?.label}
+                      </span>
+                    </>
+                  ) : null}
+                </span>
+                <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#5A6C7D]">
+                  <span className="hidden sm:inline">{filtersOpen ? copy.hideFilters : copy.showFilters}</span>
+                  <ChevronDown
+                    size={18}
+                    className={`shrink-0 transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`}
+                    aria-hidden
+                  />
+                </span>
+              </button>
+
+              <div
+                id="products-filters-panel"
+                className={filtersOpen ? 'mt-3 space-y-4' : 'hidden'}
+              >
+                <p className="text-xs leading-relaxed text-[#5A6C7D]">{copy.searchHint}</p>
+
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-[#2C3E50]">{copy.filterByCategory}</p>
+                  <div
+                    className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-1.5"
+                    role="group"
+                    aria-label={copy.filterByCategory}
+                  >
+                    {CATEGORY_OPTIONS.map(({ value }, index) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setSelectedCategory(value)}
+                        className={`flex min-h-[2.25rem] items-center justify-center rounded-full px-2.5 py-1.5 text-center text-[11px] font-semibold leading-snug transition-all duration-300 sm:min-h-0 sm:px-3 sm:py-1.5 sm:text-xs sm:whitespace-nowrap ${
+                          index === CATEGORY_OPTIONS.length - 1 && CATEGORY_OPTIONS.length % 2 === 1
+                            ? 'col-span-2 sm:col-span-1'
+                            : ''
+                        } ${
+                          selectedCategory === value
+                            ? 'text-white shadow-md'
+                            : 'bg-gray-100 text-[#2C3E50] hover:bg-gray-200'
+                        }`}
+                        style={selectedCategory === value ? { backgroundColor: 'var(--beige-600)' } : {}}
+                      >
+                        {copy.categories[value]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Sort and View Controls */}
-              <div className="flex items-center space-x-4">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg font-medium text-sm bg-white text-[#2C3E50] transition-all duration-200"
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--beige-600)';
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(232, 212, 184, 0.3)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#d1d5db';
-                    e.currentTarget.style.boxShadow = '';
-                  }}
-                >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-[#2C3E50] transition-all duration-200 sm:min-w-[11rem] sm:flex-none"
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--beige-600)';
+                      e.currentTarget.style.boxShadow = '0 0 0 2px rgba(232, 212, 184, 0.3)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#d1d5db';
+                      e.currentTarget.style.boxShadow = '';
+                    }}
+                  >
+                    {sortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
 
-                <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 ${viewMode === 'grid' ? 'text-white' : 'bg-white text-[#2C3E50] hover:bg-gray-50'}`}
-                    style={viewMode === 'grid' ? {backgroundColor: 'var(--beige-600)'} : {}}
-                  >
-                    <Grid size={20} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 border-l border-gray-300 ${viewMode === 'list' ? 'text-white' : 'bg-white text-[#2C3E50] hover:bg-gray-50'}`}
-                    style={viewMode === 'list' ? {backgroundColor: 'var(--beige-600)'} : {}}
-                  >
-                    <List size={20} />
-                  </button>
+                  <div className="flex shrink-0 overflow-hidden rounded-lg border border-gray-300">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 ${viewMode === 'grid' ? 'text-white' : 'bg-white text-[#2C3E50] hover:bg-gray-50'}`}
+                      style={viewMode === 'grid' ? { backgroundColor: 'var(--beige-600)' } : {}}
+                      aria-label="Grid view"
+                    >
+                      <Grid size={20} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`border-l border-gray-300 p-2 ${viewMode === 'list' ? 'text-white' : 'bg-white text-[#2C3E50] hover:bg-gray-50'}`}
+                      style={viewMode === 'list' ? { backgroundColor: 'var(--beige-600)' } : {}}
+                      aria-label="List view"
+                    >
+                      <List size={20} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 text-sm text-[#5A6C7D] font-medium">
               {filteredAndSortedProducts.length === 0 ? (
-                <>Showing 0 products</>
+                <>{copy.showingZero}</>
               ) : (
                 <>
-                  Showing {pageStart + 1}–{Math.min(pageStart + PRODUCTS_PER_PAGE, filteredAndSortedProducts.length)} of{' '}
-                  {filteredAndSortedProducts.length} products
+                  {copy.showingRange(
+                    pageStart + 1,
+                    Math.min(pageStart + PRODUCTS_PER_PAGE, filteredAndSortedProducts.length),
+                    filteredAndSortedProducts.length
+                  )}
                   {totalPages > 1 && (
-                    <span className="text-[#5A6C7D]/80"> · Page {safePage} of {totalPages}</span>
+                    <span className="text-[#5A6C7D]/80">{copy.pageOf(safePage, totalPages)}</span>
                   )}
                 </>
               )}
@@ -346,8 +531,8 @@ export default function ProductsPage() {
             ) : filteredAndSortedProducts.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
                 <Package className="mx-auto mb-4" size={64} style={{color: 'var(--beige-700)'}} />
-                <h2 className="text-xl font-bold text-[#2C3E50] mb-2">No products found</h2>
-                <p className="text-[#5A6C7D]">Try adjusting your filters or search to see more products.</p>
+                <h2 className="text-xl font-bold text-[#2C3E50] mb-2">{copy.noProducts}</h2>
+                <p className="text-[#5A6C7D]">{copy.noProductsHint}</p>
               </div>
             ) : (
               <>
@@ -359,14 +544,19 @@ export default function ProductsPage() {
                   }
                 >
                   {paginatedProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} onRequestSample={setSampleProduct} />
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onRequestSample={setSampleProduct}
+                      requestSampleLabel={requestSampleLabel}
+                    />
                   ))}
                 </div>
 
                 {totalPages > 1 && (
                   <nav
                     className="mt-12 flex flex-wrap items-center justify-center gap-2"
-                    aria-label="Product list pagination"
+                    aria-label={copy.paginationLabel}
                   >
                     <button
                       type="button"
@@ -375,7 +565,7 @@ export default function ProductsPage() {
                       className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-[#2C3E50] bg-white hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors"
                     >
                       <ChevronLeft size={18} aria-hidden />
-                      Previous
+                      {copy.previous}
                     </button>
                     <div className="flex flex-wrap items-center justify-center gap-1 px-2">
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -389,7 +579,7 @@ export default function ProductsPage() {
                               : 'text-[#2C3E50] bg-white border border-gray-200 hover:bg-gray-50'
                           }`}
                           style={pageNum === safePage ? { backgroundColor: 'var(--beige-600)' } : {}}
-                          aria-label={`Page ${pageNum}`}
+                          aria-label={copy.pageAria(pageNum)}
                           aria-current={pageNum === safePage ? 'page' : undefined}
                         >
                           {pageNum}
@@ -402,7 +592,7 @@ export default function ProductsPage() {
                       disabled={safePage >= totalPages}
                       className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-[#2C3E50] bg-white hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors"
                     >
-                      Next
+                      {copy.next}
                       <ChevronRight size={18} aria-hidden />
                     </button>
                   </nav>
@@ -416,10 +606,10 @@ export default function ProductsPage() {
         <section className="py-16" style={{backgroundColor: 'var(--beige-600)'}}>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">
-              Ready to Place Your Order?
+              {copy.ctaTitle}
             </h2>
             <p className="text-xl text-white/90 mb-8">
-              Contact us for samples, custom branding, or bulk orders
+              {copy.ctaBody}
             </p>
             <button
               type="button"
@@ -428,7 +618,7 @@ export default function ProductsPage() {
               style={{ color: 'var(--beige-700)' }}
             >
               <ShoppingBag size={20} aria-hidden />
-              <span>Get in Touch</span>
+              <span>{copy.ctaButton}</span>
             </button>
           </div>
         </section>
@@ -436,14 +626,25 @@ export default function ProductsPage() {
 
       <Footer />
       {sampleProduct ? (
-        <SampleRequestModal product={sampleProduct} onClose={() => setSampleProduct(null)} />
+        <SampleRequestModal
+          product={localizeProduct(sampleProduct, effectiveLocale)}
+          onClose={() => setSampleProduct(null)}
+        />
       ) : null}
     </div>
   );
 }
 
 // Enhanced Product Card Component with Image Background Style
-function ProductCard({ product, onRequestSample }: { product: Product; onRequestSample: (p: Product) => void }) {
+function ProductCard({
+  product,
+  onRequestSample,
+  requestSampleLabel,
+}: {
+  product: Product;
+  onRequestSample: (p: Product) => void;
+  requestSampleLabel: string;
+}) {
   return (
     <Link to={productPath(product)} className="block">
       <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 h-[500px] flex flex-col group cursor-pointer">
@@ -498,9 +699,9 @@ function ProductCard({ product, onRequestSample }: { product: Product; onRequest
           style={{backgroundColor: 'rgba(255, 255, 255, 0.95)', color: '#78350F'}}
           onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.transform = 'translateY(-2px)';}}
           onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(0)';}}
-          aria-label="Request Sample"
+          aria-label={requestSampleLabel}
         >
-          Request Sample
+          {requestSampleLabel}
         </button>
       </div>
       </div>

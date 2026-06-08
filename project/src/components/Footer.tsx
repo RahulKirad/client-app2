@@ -3,12 +3,13 @@ import { Mail, Phone } from 'lucide-react';
 import { useLocalizedSectionContent } from '../hooks/useLocalizedSectionContent';
 import { IMG } from '../lib/imageSizes';
 import { useI18n } from '../contexts/I18nContext';
+import { MAIN_CONTACT_EMAIL } from '../lib/brand';
 
 export default function Footer() {
   const { t } = useI18n();
   const currentYear = new Date().getFullYear();
   const contactFallback = {
-    email_primary: 'abhishek.deolalikar@gmail.com',
+    email_primary: MAIN_CONTACT_EMAIL,
     phone: '+91 7020631149',
   };
   const { content: contactInfo } = useLocalizedSectionContent('contact', contactFallback);

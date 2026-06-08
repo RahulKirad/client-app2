@@ -39,8 +39,8 @@ export default function PrivacyPolicyPage() {
               <p>
                 Cottonunique (“we”, “our”) provides premium GOTS-certified sustainable tote bags for businesses and exporters.
                 For privacy questions, please contact us at{' '}
-                <a href="mailto:info@cottonunique.com" className="underline font-medium" style={{ color: '#78350F' }}>
-                  info@cottonunique.com
+                <a href="mailto:cottoniq.co@gmail.com" className="underline font-medium" style={{ color: '#78350F' }}>
+                  cottoniq.co@gmail.com
                 </a>.
               </p>
             </section>
@@ -135,8 +135,8 @@ export default function PrivacyPolicyPage() {
               <h2 className="text-2xl font-bold mt-0 mb-3" style={{ color: '#78350F' }}>11. Contact Us</h2>
               <p>
                 For privacy-related requests, contact us at{' '}
-                <a href="mailto:info@cottonunique.com" className="underline font-medium" style={{ color: '#78350F' }}>
-                  info@cottonunique.com
+                <a href="mailto:cottoniq.co@gmail.com" className="underline font-medium" style={{ color: '#78350F' }}>
+                  cottoniq.co@gmail.com
                 </a>.
               </p>
             </section>

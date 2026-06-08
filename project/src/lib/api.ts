@@ -29,6 +29,15 @@ export interface Product {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  /** Stored German translations (populated by backend on create/update). */
+  name_de?: string;
+  category_de?: string;
+  description_de?: string;
+  material_de?: string;
+  print_type_de?: string;
+  packaging_de?: string;
+  moq_de?: string;
+  specifications_de?: Record<string, any> | string;
 }
 
 export interface Inquiry {
@@ -128,6 +137,23 @@ export function normalizeProducts(rows: unknown[]): Product[] {
       is_active: row.is_active !== false && row.is_active !== 0,
       created_at: String(row.created_at ?? ''),
       updated_at: String(row.updated_at ?? ''),
+      name_de: row.name_de != null ? String(row.name_de) : undefined,
+      category_de: row.category_de != null ? String(row.category_de) : undefined,
+      description_de: row.description_de != null ? String(row.description_de) : undefined,
+      material_de: row.material_de != null ? String(row.material_de) : undefined,
+      print_type_de: row.print_type_de != null ? String(row.print_type_de) : undefined,
+      packaging_de: row.packaging_de != null ? String(row.packaging_de) : undefined,
+      moq_de: row.moq_de != null ? String(row.moq_de) : undefined,
+      specifications_de: (() => {
+        const raw = row.specifications_de;
+        if (raw == null || raw === '') return undefined;
+        if (typeof raw === 'object') return raw as Record<string, any>;
+        try {
+          return JSON.parse(String(raw)) as Record<string, any>;
+        } catch {
+          return undefined;
+        }
+      })(),
     };
   });
 }
