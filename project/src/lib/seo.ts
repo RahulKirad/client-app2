@@ -1,5 +1,6 @@
 import type { Product } from './api';
 import { resolveMediaUrl } from './api';
+import { MAIN_CONTACT_EMAIL } from './brand';
 import { htmlToPlainText } from './productDescriptionHtml';
 
 export const BRAND_NAME = 'Cottonunique';
@@ -27,7 +28,7 @@ export function buildOrganizationJsonLd() {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
-      email: 'abhishek.deolalikar@gmail.com',
+      email: MAIN_CONTACT_EMAIL,
       availableLanguage: ['English', 'Hindi'],
     },
     areaServed: 'Worldwide',

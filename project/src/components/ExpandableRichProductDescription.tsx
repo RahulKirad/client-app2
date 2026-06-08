@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import RichProductDescription from './RichProductDescription';
+import { useI18n } from '../contexts/I18nContext';
 
 type Props = {
   description: string | null | undefined;
@@ -15,6 +16,7 @@ export default function ExpandableRichProductDescription({
   description,
   collapsedMaxClassName = 'max-h-[18rem]',
 }: Props) {
+  const { effectiveLocale } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [canExpand, setCanExpand] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -83,7 +85,13 @@ export default function ExpandableRichProductDescription({
           style={{ color: 'var(--beige-700)' }}
           aria-expanded={expanded}
         >
-          {expanded ? 'Read less' : 'Read more'}
+          {expanded
+            ? effectiveLocale === 'de'
+              ? 'Weniger lesen'
+              : 'Read less'
+            : effectiveLocale === 'de'
+              ? 'Mehr lesen'
+              : 'Read more'}
         </button>
       ) : null}
     </div>

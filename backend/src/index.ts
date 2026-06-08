@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import adminRoutes from './routes/admin';
 import chatbotRoutes from './routes/chatbot';
 import { sendInquiryEmail, sendSampleRequestEmail } from './services/email';
+import { syncMainEmailConfiguration } from './services/mainEmailSync';
 import { normalizeSectionContent, parseContentColumn } from './utils/contentNormalize';
 import {
   generateUniqueProductSlug,
@@ -15,6 +16,10 @@ import {
   toSlug,
 } from './utils/slug';
 import { getSiteSettingsPublic } from './services/siteSettingsStore';
+import {
+  backfillMissingProductGermanTranslations,
+  ensureProductI18nColumns,
+} from './services/productTranslation';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -112,9 +117,22 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    // Omit allowedHeaders so the cors package reflects Access-Control-Request-Headers.
+    // fetch(..., { cache: 'no-store' }) sends Cache-Control on preflight; a fixed allowlist
+    // of only Content-Type/Authorization caused 403 + missing ACAO on chatbot polling.
   })
 );
+
+/** Keep CORS headers on error/rate-limit responses (browser otherwise reports a CORS failure). */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && isAllowedCorsOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  }
+  next();
+});
 app.use(express.json());
 
 /** Path after /api — works whether Express gives mounted or full path. */
@@ -150,8 +168,23 @@ const limiter = rateLimit({
   legacyHeaders: false,
   skip: (req) => {
     if (req.method === 'OPTIONS') return true;
-    if (isPublicCatalogGet(req)) return true;
+    if (req.method !== 'GET') return false;
+    const pathOnly = req.originalUrl.split('?')[0];
+    // Public content reads are cached client-side but can burst on page load (many sections).
+    if (pathOnly.includes('/content/')) return true;
+    if (pathOnly.endsWith('/chatbot/settings')) return true;
+    if (pathOnly.endsWith('/site/settings')) return true;
+    if (pathOnly === '/api/products' || pathOnly.startsWith('/api/products/')) return true;
     return false;
+  },
+  handler: (req, res, _next, options) => {
+    const origin = req.headers.origin;
+    if (origin && isAllowedCorsOrigin(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Vary', 'Origin');
+    }
+    res.status(options.statusCode).json(options.message);
   },
 });
 app.use('/api', limiter);
@@ -297,6 +330,13 @@ async function testConnection() {
     await repairEmptyProductIds();
     await ensureProductSlugs();
     await migrateProductSlugsToSeoPattern(pool);
+    await ensureProductI18nColumns(pool);
+    await syncMainEmailConfiguration(pool);
+    setImmediate(() => {
+      backfillMissingProductGermanTranslations(pool).catch((e) =>
+        console.error('Product German backfill error:', e)
+      );
+    });
   } catch (error) {
     console.error('❌ Database connection failed:', error);
   }
@@ -408,7 +448,7 @@ app.post('/api/inquiries', async (req: Request, res: Response) => {
       [name, company, email, region, order_type, message]
     );
 
-    // Send inquiry notification to cottonunique.co@gmail.com (non-blocking; inquiry already saved)
+    // Send inquiry notification email (non-blocking; inquiry already saved)
     const payload = { name, company, email, region, order_type, message };
     sendInquiryEmail(payload).catch(() => {
       // Already logged in sendInquiryEmail

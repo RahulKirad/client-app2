@@ -17,9 +17,12 @@ const siteSettingsStore_1 = require("../services/siteSettingsStore");
 const email_1 = require("../services/email");
 const contentNormalize_1 = require("../utils/contentNormalize");
 const slug_1 = require("../utils/slug");
+const productTranslation_1 = require("../services/productTranslation");
+const email_2 = require("../constants/email");
+const mainEmailSync_1 = require("../services/mainEmailSync");
 const router = express_1.default.Router();
 const MAX_PRODUCT_IMAGES = 10;
-const DEFAULT_ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME || 'abhishek.deolalikar@gmail.com';
+const DEFAULT_ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME || email_2.MAIN_EMAIL;
 const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'admin@Cottonunique2026';
 const uploadsDir = path_1.default.join(__dirname, '../../uploads');
 if (!fs_1.default.existsSync(uploadsDir)) {
@@ -283,7 +286,7 @@ const DEFAULT_CONTENT_SECTIONS = [
         content: {
             heading: 'Get in Touch',
             subheading: "Ready to start your sustainable journey? Let's create something amazing together.",
-            email_primary: 'abhishek.deolalikar@gmail.com',
+            email_primary: email_2.MAIN_EMAIL,
             email_secondary: '',
             phone: '+91 7020631149',
             whatsapp_number: '+91 7020631149',
@@ -321,6 +324,7 @@ async function ensureDefaultContentSections() {
     }
     await migrateContentImages();
     await migrateEcototeDuopackSpecs();
+    await (0, mainEmailSync_1.syncMainEmailConfiguration)(pool);
 }
 const IMAGE_MIGRATIONS = {
     about: {
@@ -580,10 +584,18 @@ router.post('/products', auth_1.authenticateToken, upload.any(), async (req, res
                 throw insertErr;
             }
         }
+        let germanTranslation = false;
+        try {
+            germanTranslation = await (0, productTranslation_1.syncProductGermanTranslation)(pool, productId);
+        }
+        catch (translationErr) {
+            console.warn('German translation after product create failed (non-fatal):', translationErr);
+        }
         res.status(201).json({
             message: 'Product created successfully',
             id: productId,
-            slug
+            slug,
+            germanTranslation,
         });
     }
     catch (error) {
@@ -636,7 +648,14 @@ router.put('/products/:id', auth_1.authenticateToken, upload.any(), async (req, 
         updateQuery += ' WHERE id = ?';
         queryParams.push(id);
         await pool.execute(updateQuery, queryParams);
-        res.json({ message: 'Product updated successfully' });
+        let germanTranslation = false;
+        try {
+            germanTranslation = await (0, productTranslation_1.syncProductGermanTranslation)(pool, id);
+        }
+        catch (translationErr) {
+            console.warn('German translation after product update failed (non-fatal):', translationErr);
+        }
+        res.json({ message: 'Product updated successfully', germanTranslation });
     }
     catch (error) {
         console.error('Error updating product:', error);

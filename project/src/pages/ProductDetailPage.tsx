@@ -17,9 +17,10 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SampleRequestModal from '../components/SampleRequestModal';
 import { useI18n } from '../contexts/I18nContext';
+import { localizeProduct, localizeProducts } from '../lib/localizeProduct';
 
 export default function ProductDetailPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, effectiveLocale } = useI18n();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
@@ -168,9 +169,14 @@ export default function ProductDetailPage() {
     );
   }
 
-  const specs = product.specifications && typeof product.specifications === 'object' ? product.specifications : {};
+  const displayProduct = localizeProduct(product, effectiveLocale);
+  const displayRelated = localizeProducts(relatedProducts, effectiveLocale);
+  const specs =
+    displayProduct.specifications && typeof displayProduct.specifications === 'object'
+      ? displayProduct.specifications
+      : {};
   const specEntries = Object.entries(specs).filter(([k, v]) => k !== 'pricing' && v != null && String(v).trim() !== '');
-  const seo = productSeoFromRecord(product);
+  const seo = productSeoFromRecord(displayProduct);
 
   return (
     <div className="min-h-screen bg-white">
@@ -181,7 +187,7 @@ export default function ProductDetailPage() {
         ogImage={seo.ogImage}
         ogTitle={seo.title}
         ogDescription={seo.description}
-        jsonLd={[buildProductJsonLd(product), buildProductBreadcrumbJsonLd(product)]}
+        jsonLd={[buildProductJsonLd(displayProduct), buildProductBreadcrumbJsonLd(displayProduct)]}
       />
       <Header />
       <main className="pt-20 pb-16">
@@ -247,7 +253,7 @@ export default function ProductDetailPage() {
                 >
                   <img
                     src={mainImageUrl}
-                    alt={product.name}
+                    alt={displayProduct.name}
                     className="w-full h-full object-cover transition-opacity duration-300"
                     width={IMG.product.width}
                     height={IMG.product.height}
@@ -339,7 +345,7 @@ export default function ProductDetailPage() {
                         >
                           <img
                             src={resolveMediaUrl(url)}
-                            alt={`${product.name} view ${i + 1}`}
+                            alt={`${displayProduct.name} view ${i + 1}`}
                             className="h-full w-full object-cover"
                             width={IMG.thumb.width}
                             height={IMG.thumb.height}
@@ -416,16 +422,16 @@ export default function ProductDetailPage() {
 
               <div className={scan.active ? 'lg:hidden' : ''}>
               <p className="text-sm font-medium uppercase tracking-wider mb-2" style={{ color: 'var(--beige-600)' }}>
-                {product.category}
+                {displayProduct.category}
               </p>
               <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: 'var(--heading-font)' }}>
-                {product.name}
+                {displayProduct.name}
               </h1>
 
-              {product.moq && (
+              {displayProduct.moq && (
                 <div className="flex items-center gap-3 mb-6">
                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700">
-                    MOQ: {product.moq}
+                    MOQ: {displayProduct.moq}
                   </span>
                 </div>
               )}
@@ -433,24 +439,30 @@ export default function ProductDetailPage() {
               {/* Full description (clamp + Read more when long) */}
               <div className="mb-8">
                 <h2 className="text-lg font-semibold text-slate-900 mb-2">{t('ecom.productDescription')}</h2>
-                <ExpandableRichProductDescription description={product.description} />
+                <ExpandableRichProductDescription description={displayProduct.description} />
               </div>
 
               {/* Attributes */}
               <div className="space-y-3 mb-8">
-                {product.material && (
+                {displayProduct.material && (
                   <p className="text-slate-700">
-                    <span className="font-semibold text-slate-900">Material:</span> {product.material}
+                    <span className="font-semibold text-slate-900">{t('ecom.material')}:</span> {displayProduct.material}
                   </p>
                 )}
-                {product.print_type && (
+                {displayProduct.print_type && (
                   <p className="text-slate-700">
-                    <span className="font-semibold text-slate-900">Print type:</span> {product.print_type}
+                    <span className="font-semibold text-slate-900">
+                      {effectiveLocale === 'de' ? 'Druckart' : 'Print type'}:
+                    </span>{' '}
+                    {displayProduct.print_type}
                   </p>
                 )}
-                {product.packaging && (
+                {displayProduct.packaging && (
                   <p className="text-slate-700">
-                    <span className="font-semibold text-slate-900">Packaging:</span> {product.packaging}
+                    <span className="font-semibold text-slate-900">
+                      {effectiveLocale === 'de' ? 'Verpackung' : 'Packaging'}:
+                    </span>{' '}
+                    {displayProduct.packaging}
                   </p>
                 )}
               </div>
@@ -474,14 +486,6 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 space-y-2">
-                <p><span className="font-semibold text-slate-900">{t('compliance.vatIncluded')}</span></p>
-                <p>{t('compliance.shippingInfo')}</p>
-                <p>{t('compliance.delivery')}</p>
-                <p>{t('compliance.returnPolicy')} <Link className="underline" to="/widerruf">{t('ecom.returnPolicy')}</Link></p>
-                <p>{t('ecom.stock')}: <span className="font-medium">{locale === 'de' ? 'Verfügbar' : 'In stock'}</span></p>
-              </div>
-
               <button
                 type="button"
                 onClick={() => setSampleModalOpen(true)}
@@ -495,13 +499,13 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {relatedProducts.length > 0 ? (
+          {displayRelated.length > 0 ? (
             <section className="mt-16 pt-12 border-t border-slate-200" aria-labelledby="related-products-heading">
               <h2 id="related-products-heading" className="text-2xl font-bold text-slate-900 mb-6" style={{ fontFamily: 'var(--heading-font)' }}>
                 {t('ecom.relatedProducts')}
               </h2>
               <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {relatedProducts.map((related) => (
+                {displayRelated.map((related) => (
                   <li key={related.id}>
                     <Link
                       to={productPath(related)}
@@ -536,7 +540,7 @@ export default function ProductDetailPage() {
           {/* Toolbar: stacks on narrow phones, zoom row can scroll horizontally */}
           <div className="flex shrink-0 flex-col gap-2 border-b border-white/10 bg-black/70 px-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4 sm:py-3">
             <div className="min-w-0 text-sm font-medium text-white/95 sm:text-base">
-              <span className="line-clamp-2 sm:line-clamp-1">{product.name}</span>
+              <span className="line-clamp-2 sm:line-clamp-1">{displayProduct.name}</span>
             </div>
             <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch] sm:flex-none sm:gap-2 sm:pb-0 sm:overflow-visible">
               <button
@@ -608,7 +612,7 @@ export default function ProductDetailPage() {
                 >
                   <img
                     src={mainImageUrl}
-                    alt={product.name}
+                    alt={displayProduct.name}
                     className="max-h-[min(72dvh,calc(100dvh-9.5rem))] max-w-full object-contain select-none max-lg:landscape:!max-h-[min(56dvh,calc(100dvh-8.75rem))] sm:max-h-[min(78dvh,calc(100dvh-10.5rem))] md:max-h-[min(82dvh,calc(100dvh-11rem))]"
                     width={IMG.product.width}
                     height={IMG.product.height}
@@ -661,7 +665,7 @@ export default function ProductDetailPage() {
                           >
                             <img
                               src={resolveMediaUrl(url)}
-                              alt={`${product.name} thumbnail ${i + 1}`}
+                              alt={`${displayProduct.name} thumbnail ${i + 1}`}
                               className="h-full w-full object-cover"
                               width={IMG.thumb.width}
                               height={IMG.thumb.height}
@@ -696,7 +700,7 @@ export default function ProductDetailPage() {
         </div>
       )}
       {sampleModalOpen && product ? (
-        <SampleRequestModal product={product} onClose={() => setSampleModalOpen(false)} />
+        <SampleRequestModal product={displayProduct} onClose={() => setSampleModalOpen(false)} />
       ) : null}
       <Footer />
     </div>

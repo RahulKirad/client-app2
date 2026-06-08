@@ -1,9 +1,9 @@
 import nodemailer from 'nodemailer';
+import { MAIN_EMAIL } from '../constants/email';
 import { getResolvedSmtpCredentials } from './smtpConfigStore';
 
-/** Recipient address for all inquiry emails (Cottonunique). */
-export const INQUIRY_RECIPIENT_EMAIL = 'cottonunique.co@gmail.com';
-export const INQUIRY_RECIPIENT_EMAIL_SECONDARY = 'cottoniq.co@gmail.com';
+/** Default recipient for inquiry and sample-request notifications. */
+export const INQUIRY_RECIPIENT_EMAIL = MAIN_EMAIL;
 
 /** Inquiry payload as received from the contact form. */
 export interface InquiryPayload {
@@ -17,6 +17,25 @@ export interface InquiryPayload {
 
 const SMTP_DEFAULT_HOST = process.env.EMAIL_SMTP_HOST || 'smtp.gmail.com';
 const SMTP_DEFAULT_PORT = parseInt(process.env.EMAIL_SMTP_PORT || '587', 10);
+
+/** Brand beige palette for HTML emails (matches site CSS variables). */
+const EMAIL_BEIGE = {
+  50: '#FEFCF9',
+  100: '#FAF7F2',
+  200: '#F5F0E8',
+  300: '#EDE4D6',
+  400: '#E8D4B8',
+  500: '#E0D4C2',
+  600: '#D4C4A8',
+  700: '#C9B89A',
+  800: '#B8A88C',
+  900: '#A89B8F',
+  text: '#5C5348',
+  textMuted: '#8A7F72',
+} as const;
+
+const EMAIL_FONT =
+  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
 type Resolved = Awaited<ReturnType<typeof getResolvedSmtpCredentials>>;
 
@@ -41,7 +60,7 @@ async function getTransporterAndFrom(): Promise<{ transporter: nodemailer.Transp
 }
 
 /**
- * Sends an inquiry notification email to the configured recipient (cottonunique.co@gmail.com).
+ * Sends an inquiry notification email to the configured recipient (default: cottoniq.co@gmail.com).
  * Does not throw; logs errors and returns false on failure.
  *
  * @param payload - Inquiry form data (name, company, email, region, order_type, message)
@@ -51,7 +70,7 @@ export async function sendInquiryEmail(payload: InquiryPayload): Promise<boolean
   const recipients = buildInquiryRecipients(process.env.INQUIRY_RECIPIENT_EMAIL);
   try {
     const { transporter, from: fromUser } = await getTransporterAndFrom();
-    const from = fromUser || process.env.EMAIL_USER || recipients[0] || INQUIRY_RECIPIENT_EMAIL;
+    const from = fromUser || process.env.EMAIL_USER || MAIN_EMAIL;
     const subject = `[Cottonunique] New inquiry from ${payload.name}`;
     const text = [
       '═══════════════════════════════════════════════════════',
@@ -78,122 +97,7 @@ export async function sendInquiryEmail(payload: InquiryPayload): Promise<boolean
     ]
       .filter(Boolean)
       .join('\n');
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New Inquiry - Cottonunique</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5; line-height: 1.6;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f5f5f5; padding: 20px;">
-    <tr>
-      <td align="center" style="padding: 20px 0;">
-        <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
-          
-          <!-- Header -->
-          <tr>
-            <td style="background: linear-gradient(135deg, #78350F 0%, #A0522D 100%); padding: 30px 40px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: 0.5px;">
-                🎯 New Inquiry Received
-              </h1>
-              <p style="margin: 10px 0 0 0; color: #FDF6E3; font-size: 14px; opacity: 0.9;">
-                Cottonunique Website Contact Form
-              </p>
-            </td>
-          </tr>
-
-          <!-- Main Content -->
-          <tr>
-            <td style="padding: 40px;">
-              
-              <!-- Customer Information Section -->
-              <div style="background-color: #FDF6E3; border-left: 4px solid #78350F; padding: 20px; margin-bottom: 30px; border-radius: 4px;">
-                <h2 style="margin: 0 0 20px 0; color: #78350F; font-size: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                  👤 Customer Information
-                </h2>
-                
-                <table role="presentation" style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 12px 0; border-bottom: 1px solid #E8D5B7;">
-                      <span style="display: inline-block; min-width: 140px; color: #78350F; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Name:</span>
-                      <span style="color: #3a2f1f; font-size: 15px; font-weight: 500;">${escapeHtml(payload.name)}</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 12px 0; border-bottom: 1px solid #E8D5B7;">
-                      <span style="display: inline-block; min-width: 140px; color: #78350F; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Email:</span>
-                      <a href="mailto:${escapeHtml(payload.email)}" style="color: #78350F; font-size: 15px; font-weight: 500; text-decoration: none; border-bottom: 1px solid #78350F;">${escapeHtml(payload.email)}</a>
-                    </td>
-                  </tr>
-                  ${payload.company ? `
-                  <tr>
-                    <td style="padding: 12px 0; border-bottom: 1px solid #E8D5B7;">
-                      <span style="display: inline-block; min-width: 140px; color: #78350F; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Company:</span>
-                      <span style="color: #3a2f1f; font-size: 15px; font-weight: 500;">${escapeHtml(payload.company)}</span>
-                    </td>
-                  </tr>
-                  ` : ''}
-                  ${payload.region ? `
-                  <tr>
-                    <td style="padding: 12px 0; border-bottom: 1px solid #E8D5B7;">
-                      <span style="display: inline-block; min-width: 140px; color: #78350F; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Region:</span>
-                      <span style="color: #3a2f1f; font-size: 15px; font-weight: 500;">${escapeHtml(payload.region)}</span>
-                    </td>
-                  </tr>
-                  ` : ''}
-                  ${payload.order_type ? `
-                  <tr>
-                    <td style="padding: 12px 0;">
-                      <span style="display: inline-block; min-width: 140px; color: #78350F; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Order Type:</span>
-                      <span style="display: inline-block; background-color: #78350F; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${escapeHtml(payload.order_type)}</span>
-                    </td>
-                  </tr>
-                  ` : ''}
-                </table>
-              </div>
-
-              <!-- Message Section -->
-              <div style="background-color: #ffffff; border: 2px solid #E8D5B7; padding: 25px; border-radius: 4px; margin-bottom: 20px;">
-                <h2 style="margin: 0 0 20px 0; color: #78350F; font-size: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                  💬 Inquiry Message
-                </h2>
-                <div style="background-color: #FDF6E3; padding: 20px; border-radius: 4px; border-left: 3px solid #78350F;">
-                  <p style="margin: 0; color: #3a2f1f; font-size: 15px; line-height: 1.8; white-space: pre-wrap; font-family: inherit;">${escapeHtml(payload.message)}</p>
-                </div>
-              </div>
-
-              <!-- Action Section -->
-              <div style="background-color: #FDF6E3; padding: 20px; border-radius: 4px; text-align: center; margin-top: 30px;">
-                <p style="margin: 0 0 15px 0; color: #78350F; font-size: 14px; font-weight: 600;">
-                  📧 Reply directly to this email to respond to the customer
-                </p>
-                <a href="mailto:${escapeHtml(payload.email)}" style="display: inline-block; background-color: #78350F; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
-                  Reply to Customer
-                </a>
-              </div>
-
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #FDF6E3; padding: 20px 40px; text-align: center; border-top: 1px solid #E8D5B7;">
-              <p style="margin: 0; color: #78350F; font-size: 12px; opacity: 0.8;">
-                This inquiry was submitted through the Cottonunique website contact form.<br>
-                <strong>Timestamp:</strong> ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' })}
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-    `;
+    const html = buildInquiryEmailHtml(payload);
     await transporter.sendMail({
       from: `Cottonunique Contact <${from}>`,
       to: recipients.join(', '),
@@ -233,7 +137,7 @@ export async function sendSampleRequestEmail(payload: SampleRequestPayload): Pro
   const recipients = buildInquiryRecipients(process.env.INQUIRY_RECIPIENT_EMAIL);
   try {
     const { transporter, from: fromUser } = await getTransporterAndFrom();
-    const from = fromUser || process.env.EMAIL_USER || recipients[0] || INQUIRY_RECIPIENT_EMAIL;
+    const from = fromUser || process.env.EMAIL_USER || MAIN_EMAIL;
     const subject = `[Cottonunique] Sample request: ${payload.productName} — ${payload.name}`;
     const text = [
       '═══════════════════════════════════════════════════════',
@@ -263,38 +167,7 @@ export async function sendSampleRequestEmail(payload: SampleRequestPayload): Pro
       .filter(Boolean)
       .join('\n');
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><title>Sample request</title></head>
-<body style="margin:0;padding:24px;font-family:system-ui,sans-serif;background:#f5f5f5;">
-  <table role="presentation" style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    <tr>
-      <td style="background:linear-gradient(135deg,#78350F,#A0522D);color:#fff;padding:24px 28px;">
-        <h1 style="margin:0;font-size:22px;">Sample request</h1>
-        <p style="margin:8px 0 0;font-size:14px;opacity:0.95">${escapeHtml(payload.productName)}</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:28px;color:#3a2f1f;">
-        <p style="margin:0 0 12px;"><strong>Product ID:</strong> ${escapeHtml(payload.productId)}</p>
-        <hr style="border:none;border-top:1px solid #E8D5B7;margin:16px 0;" />
-        <p style="margin:0 0 6px;"><strong>Name:</strong> ${escapeHtml(payload.name)}</p>
-        <p style="margin:0 0 6px;"><strong>Email:</strong> <a href="mailto:${escapeHtml(payload.email)}">${escapeHtml(payload.email)}</a></p>
-        ${payload.company ? `<p style="margin:0 0 6px;"><strong>Company:</strong> ${escapeHtml(payload.company)}</p>` : ''}
-        ${payload.region ? `<p style="margin:0 0 6px;"><strong>Region:</strong> ${escapeHtml(payload.region)}</p>` : ''}
-        <h2 style="margin:20px 0 8px;font-size:16px;color:#78350F;">Message</h2>
-        <div style="background:#FDF6E3;padding:16px;border-radius:6px;border-left:4px solid #78350F;white-space:pre-wrap;">${escapeHtml(payload.message)}</div>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:16px 28px;background:#FDF6E3;font-size:12px;color:#78350F;text-align:center;">
-        Submitted from the Cottonunique website · ${escapeHtml(new Date().toISOString())}
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+    const html = buildSampleRequestEmailHtml(payload);
 
     await transporter.sendMail({
       from: `Cottonunique Samples <${from}>`,
@@ -335,11 +208,212 @@ export async function sendSmtpTestEmail(to: string): Promise<void> {
   });
 }
 
+function buildSampleRequestEmailHtml(payload: SampleRequestPayload): string {
+  const timestamp = new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' });
+  const b = EMAIL_BEIGE;
+
+  const infoFields: Array<{ label: string; value: string }> = [
+    { label: 'Product', value: escapeHtml(payload.productName) },
+    { label: 'Product ID', value: escapeHtml(payload.productId) },
+    { label: 'Name', value: escapeHtml(payload.name) },
+    {
+      label: 'Email',
+      value: `<a href="mailto:${escapeHtml(payload.email)}" style="color:${b[900]};text-decoration:none;border-bottom:1px solid ${b[600]};">${escapeHtml(payload.email)}</a>`,
+    },
+  ];
+  if (payload.company) {
+    infoFields.push({ label: 'Company', value: escapeHtml(payload.company) });
+  }
+  if (payload.region) {
+    infoFields.push({ label: 'Region', value: escapeHtml(payload.region) });
+  }
+
+  const infoRows = infoFields
+    .map((field, index) => {
+      const isLast = index === infoFields.length - 1;
+      const border = isLast ? '' : `border-bottom:1px solid ${b[400]};`;
+      return `
+    <tr>
+      <td style="padding:14px 20px;${border}width:28%;vertical-align:top;background-color:${b[100]};">
+        <span style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${b[800]};">${field.label}</span>
+      </td>
+      <td style="padding:14px 20px;${border}color:${b.text};font-size:15px;font-weight:500;">${field.value}</td>
+    </tr>`;
+    })
+    .join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sample request - Cottonunique</title></head>
+<body style="margin:0;padding:0;font-family:${EMAIL_FONT};background-color:${b[200]};color:${b.text};line-height:1.6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:${b[200]};">
+    <tr>
+      <td style="padding:0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:${b[300]};border-bottom:2px solid ${b[500]};">
+          <tr>
+            <td style="padding:28px 32px;">
+              <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${b[800]};">Cottonunique</p>
+              <h1 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-0.02em;color:${b.text};">Sample request</h1>
+              <p style="margin:8px 0 0;font-size:14px;color:${b.textMuted};">${escapeHtml(payload.productName)}</p>
+            </td>
+            <td align="right" valign="middle" style="padding:28px 32px;white-space:nowrap;">
+              <span style="display:inline-block;padding:8px 16px;background-color:${b[100]};border:1px solid ${b[500]};border-radius:6px;font-size:12px;font-weight:600;color:${b[800]};">${escapeHtml(timestamp)}</span>
+            </td>
+          </tr>
+        </table>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:${b[50]};">
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${b[800]};">Request details</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid ${b[400]};">${infoRows}</table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 32px;">
+              <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${b[800]};">Message</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid ${b[400]};background-color:${b[100]};">
+                <tr><td style="padding:24px 28px;"><p style="margin:0;font-size:15px;line-height:1.75;white-space:pre-wrap;">${escapeHtml(payload.message)}</p></td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 36px;text-align:center;">
+              <a href="mailto:${escapeHtml(payload.email)}" style="display:inline-block;padding:12px 28px;background-color:${b[600]};color:${b.text};text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:6px;border:1px solid ${b[700]};">Reply to customer</a>
+            </td>
+          </tr>
+        </table>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:${b[300]};border-top:1px solid ${b[500]};">
+          <tr><td style="padding:18px 32px;text-align:center;"><p style="margin:0;font-size:12px;color:${b.textMuted};">Submitted from the Cottonunique website.</p></td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildInquiryEmailHtml(payload: InquiryPayload): string {
+  const timestamp = new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' });
+  const b = EMAIL_BEIGE;
+
+  const infoFields: Array<{ label: string; value: string }> = [
+    { label: 'Name', value: escapeHtml(payload.name) },
+    {
+      label: 'Email',
+      value: `<a href="mailto:${escapeHtml(payload.email)}" style="color:${b[900]};text-decoration:none;border-bottom:1px solid ${b[600]};">${escapeHtml(payload.email)}</a>`,
+    },
+  ];
+  if (payload.company) {
+    infoFields.push({ label: 'Company', value: escapeHtml(payload.company) });
+  }
+  if (payload.region) {
+    infoFields.push({ label: 'Region', value: escapeHtml(payload.region) });
+  }
+  if (payload.order_type) {
+    infoFields.push({
+      label: 'Order type',
+      value: `<span style="display:inline-block;padding:5px 14px;background-color:${b[600]};color:${b.text};font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:999px;">${escapeHtml(payload.order_type)}</span>`,
+    });
+  }
+
+  const customerRows = infoFields
+    .map((field, index) => {
+      const isLast = index === infoFields.length - 1;
+      const border = isLast ? '' : `border-bottom:1px solid ${b[400]};`;
+      return `
+    <tr>
+      <td style="padding:14px 20px;${border}width:28%;vertical-align:top;background-color:${b[100]};">
+        <span style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${b[800]};">${field.label}</span>
+      </td>
+      <td style="padding:14px 20px;${border}color:${b.text};font-size:15px;font-weight:500;">
+        ${field.value}
+      </td>
+    </tr>`;
+    })
+    .join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Inquiry - Cottonunique</title>
+</head>
+<body style="margin:0;padding:0;font-family:${EMAIL_FONT};background-color:${b[200]};color:${b.text};line-height:1.6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:${b[200]};">
+    <tr>
+      <td style="padding:0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:${b[300]};border-bottom:2px solid ${b[500]};">
+          <tr>
+            <td style="padding:28px 32px;">
+              <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${b[800]};">Cottonunique</p>
+              <h1 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-0.02em;color:${b.text};">New inquiry received</h1>
+              <p style="margin:8px 0 0;font-size:14px;color:${b.textMuted};">Website contact form submission</p>
+            </td>
+            <td align="right" valign="middle" style="padding:28px 32px;white-space:nowrap;">
+              <span style="display:inline-block;padding:8px 16px;background-color:${b[100]};border:1px solid ${b[500]};border-radius:6px;font-size:12px;font-weight:600;color:${b[800]};">${escapeHtml(timestamp)}</span>
+            </td>
+          </tr>
+        </table>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:${b[50]};">
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${b[800]};">Customer information</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid ${b[400]};background-color:${b[50]};">
+                ${customerRows}
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px 32px;">
+              <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${b[800]};">Inquiry message</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid ${b[400]};background-color:${b[100]};">
+                <tr>
+                  <td style="padding:24px 28px;">
+                    <p style="margin:0;font-size:15px;line-height:1.75;color:${b.text};white-space:pre-wrap;">${escapeHtml(payload.message)}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px 36px;text-align:center;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:${b[200]};border:1px solid ${b[400]};">
+                <tr>
+                  <td style="padding:24px 28px;text-align:center;">
+                    <p style="margin:0 0 16px;font-size:14px;color:${b.textMuted};">Reply directly to this email to respond to the customer.</p>
+                    <a href="mailto:${escapeHtml(payload.email)}" style="display:inline-block;padding:12px 28px;background-color:${b[600]};color:${b.text};text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:6px;border:1px solid ${b[700]};">Reply to customer</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:${b[300]};border-top:1px solid ${b[500]};">
+          <tr>
+            <td style="padding:18px 32px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:${b.textMuted};">
+                This inquiry was submitted through the Cottonunique website contact form.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 function buildInquiryRecipients(envValue?: string): string[] {
   const raw = (envValue || '').trim();
   const base = raw
     ? raw.split(',').map((s) => s.trim()).filter(Boolean)
-    : [INQUIRY_RECIPIENT_EMAIL, INQUIRY_RECIPIENT_EMAIL_SECONDARY];
+    : [INQUIRY_RECIPIENT_EMAIL];
   // De-dupe while preserving order
   const seen = new Set<string>();
   return base.filter((email) => {
