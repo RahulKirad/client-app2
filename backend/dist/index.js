@@ -13,9 +13,11 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const admin_1 = __importDefault(require("./routes/admin"));
 const chatbot_1 = __importDefault(require("./routes/chatbot"));
 const email_1 = require("./services/email");
+const mainEmailSync_1 = require("./services/mainEmailSync");
 const contentNormalize_1 = require("./utils/contentNormalize");
 const slug_1 = require("./utils/slug");
 const siteSettingsStore_1 = require("./services/siteSettingsStore");
+const productTranslation_1 = require("./services/productTranslation");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
 const CANONICAL_IN_PHONE_DISPLAY = '+91 7020631149';
@@ -98,8 +100,16 @@ app.use((0, cors_1.default)({
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && isAllowedCorsOrigin(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Vary', 'Origin');
+    }
+    next();
+});
 app.use(express_1.default.json());
 function apiRequestPath(req) {
     const raw = (req.originalUrl || req.url || req.path || '').split('?')[0];
@@ -129,9 +139,27 @@ const limiter = (0, express_rate_limit_1.default)({
     skip: (req) => {
         if (req.method === 'OPTIONS')
             return true;
-        if (isPublicCatalogGet(req))
+        if (req.method !== 'GET')
+            return false;
+        const pathOnly = req.originalUrl.split('?')[0];
+        if (pathOnly.includes('/content/'))
+            return true;
+        if (pathOnly.endsWith('/chatbot/settings'))
+            return true;
+        if (pathOnly.endsWith('/site/settings'))
+            return true;
+        if (pathOnly === '/api/products' || pathOnly.startsWith('/api/products/'))
             return true;
         return false;
+    },
+    handler: (req, res, _next, options) => {
+        const origin = req.headers.origin;
+        if (origin && isAllowedCorsOrigin(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            res.setHeader('Vary', 'Origin');
+        }
+        res.status(options.statusCode).json(options.message);
     },
 });
 app.use('/api', limiter);
@@ -257,6 +285,11 @@ async function testConnection() {
         await repairEmptyProductIds();
         await ensureProductSlugs();
         await (0, slug_1.migrateProductSlugsToSeoPattern)(pool);
+        await (0, productTranslation_1.ensureProductI18nColumns)(pool);
+        await (0, mainEmailSync_1.syncMainEmailConfiguration)(pool);
+        setImmediate(() => {
+            (0, productTranslation_1.backfillMissingProductGermanTranslations)(pool).catch((e) => console.error('Product German backfill error:', e));
+        });
     }
     catch (error) {
         console.error('❌ Database connection failed:', error);

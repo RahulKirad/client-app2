@@ -1,0 +1,166 @@
+/**
+ * Curated German catalog copy keyed by exact English product name (trimmed).
+ * Used for 100% accurate translations of known products; new products fall back to phrase rules.
+ */
+export type ProductCatalogDeEntry = {
+  name_de: string;
+  category_de: string;
+  description_de: string;
+  material_de: string;
+  print_type_de: string;
+  packaging_de: string;
+  moq_de: string;
+};
+
+export const PRODUCT_CATALOG_DE: Record<string, ProductCatalogDeEntry> = {
+  'The Cottonunique Signature Black': {
+    name_de: 'Cottonunique Signature Schwarz',
+    category_de: 'Gebrandete Unternehmenstaschen',
+    description_de:
+      'Diese elegante, professionelle schwarze Tragetasche ist die perfekte Leinwand für das Engagement Ihrer Marke für den Planeten. Für Langlebigkeit und Stil konzipiert, verfügt sie über einen kontrastreichen Druck, der die Grundwerte der Kreislaufwirtschaft hervorhebt.\r\n\r\nProdukt-Highlights\r\nPremium-Ästhetik: Tiefschwarze, robuste Baumwolle für einen sophistizierten, modernen Look.\r\n\r\nUmweltbotschaft: Vorgedruckt mit „REDUCE REUSE RECYCLE REPEAT“, um nachhaltige Gewohnheiten zu inspirieren.\r\n\r\nCottonunique-Branding: Mit unserem charakteristischen Siegel für Bio-Baumwollqualität.\r\n\r\nGroßzügiges Design: Breiter Boden mit Zwickel bietet zusätzlichen Platz für Einkäufe, Sportausrüstung oder Alltagsutensilien.\r\n\r\nVerstärkter Tragekomfort: Lange, stabile Henkel für bequemes Tragen über der Schulter.\r\n\r\n🌿 Setzen Sie ein klares Zeichen mit einer Tasche, die etwas zurückgibt.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  'The Cuvée Cotton Pouch': {
+    name_de: 'Die Cuvée-Baumwolltasche',
+    category_de: 'Saisonale Geschenkeditionen',
+    description_de:
+      'Veredeln Sie Ihre Geschenke mit unserer Premium-Weintasche aus 100 % Bio-Baumwolle. Für alle, die feine Weine und nachhaltigen Luxus schätzen, bietet diese Tasche eine elegante Alternative zu Einwegverpackungen.\r\n\r\nProduktmerkmale\r\nÜberlegener Schutz: Schwerer Canvas stützt Flaschen sicher.\r\n\r\nÖkologisch verfeinert: GOTS-zertifizierte Baumwolle für einen bewussten, hochwertigen Lebensstil.\r\n\r\nPassgenaue Form: Ideal dimensioniert für Standard-Wein-, Champagner- oder Spirituosenflaschen.\r\n\r\nCharakteristische Details: Verstärkte Nähte und elegante, bequeme Henkel für müheloses Tragen.\r\n\r\nGeschenkfertige Leinwand: Klare, minimalistische Ästhetik als hochwertige, wiederverwendbare Geschenktasche.\r\n\r\n🍷 Der Goldstandard für nachhaltiges Schenken.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  'The Coral Earth Messenger': {
+    name_de: 'Die Coral Earth Messenger-Tasche',
+    category_de: 'Klassische Baumwolltaschen',
+    description_de:
+      'Setzen Sie ein klares Zeichen für den Planeten mit dieser lebendigen, korallenrosa Tragetasche. Die Verbindung von modernem Farbakzent mit einer zeitlosen Umweltbotschaft macht sie ideal für alle, die ihre nachhaltigen Entscheidungen sichtbar machen möchten.\r\n\r\nProdukt-Highlights\r\nAuffällige Farbe: Ein leuchtendes, energiegeladenes Korallenrot, das Ihren Alltagsbegleitern einen frischen Look verleiht.\r\n\r\nUmweltbewusstes Grafikdesign: Mit einem „Go Green Save Planet“-Baum-und-Weltkugel-Emblem in kontrastierendem Waldgrün.\r\n\r\nLeicht und langlebig: Hochwertiger Baumwoll-Canvas, der sich leicht falten und tragen lässt, aber schwere Lasten aushält.\r\n\r\nOptimierter Raum: Seitenzwickel sorgen für zusätzliche Tiefe – ideal für Bücher, Einkäufe oder Wechselkleidung.\r\n\r\nSaubere Verarbeitung: Tonale Nähte und verstärkte Henkel für ein hochwertiges Erscheinungsbild aus jedem Winkel.\r\n\r\n🌍 Tragen Sie die Botschaft – verändern Sie die Welt.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  'Live Simple Life Canvas Tote Bag': {
+    name_de: 'Live Simple Life Leinwand-Tragetasche',
+    category_de: 'Klassische Baumwolltaschen',
+    description_de:
+      'Diese botanische Tragetasche verbindet zarte florale Kunst mit robuster Konstruktion – zuverlässig und zugleich wunderschön. Das „Live Simple Life“-Design wird von einem lebendigen Herbststrauß eingerahmt und ist eine elegante Begleitung für jede Jahreszeit.\r\n\r\nProdukt-Highlights\r\nKunstvoller Blumendruck: Hochauflösender, mehrfarbiger botanischer Kranz mit warmen Lilien und Rosen.\r\n\r\nÜberragende Haltbarkeit: Verstärkte Kreuzstiche an den Henkeln für maximale Tragkraft.\r\n\r\nMeisterhafte Verarbeitung: Saubere, flache Seitennähte für ein hakenfreies Innenleben und lange Lebensdauer.\r\n\r\nGroßzügiges Fassungsvermögen: Weiter Innenraum für Markteinkäufe und Alltagsutensilien.\r\n\r\nNatürliche Textur: Premium-ungebleichter cremefarbener Baumwoll-Canvas mit weichem, organischem Gefühl.\r\n\r\n🌸 Stärke trifft auf Einfachheit – in jeder Naht.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '100 Einheiten',
+  },
+  'Classic Cotton Unique Bag': {
+    name_de: 'Klassische Cotton Unique Tasche',
+    category_de: 'Klassische Baumwolltaschen',
+    description_de:
+      'Diese minimalistische Tragetasche erinnert daran, mit Liebe zu handeln und Einfachheit zu leben. Aus ultrasauberer, off-white Bio-Baumwolle gefertigt, vereint sie eine klare Grafikbotschaft mit der hochwertigen Verarbeitung, die Ihr Alltagsleben verdient.\r\n\r\nProdukt-Highlights\r\nHerzliches Design: Lebendiges rotes Herz mit „Love“-Schriftzug und dem Motto „Live Simple Life“.\r\n\r\nStrahlend weißer Canvas: Hochwertige Oberfläche, die die Grafikfarben hervorhebt. Cottonunique-Qualität: Mit unserem offiziellen Bio-Baumwoll-Siegel für garantierte Nachhaltigkeit.\r\n\r\nAlltagstauglich: Leicht und dennoch stabil – ideal für Besorgungen, Sport oder Bücher.\r\n\r\nNachhaltige Wahl: 100 % biologisch abbaubar und GOTS-konform für einen Kreislauf-Lebensstil.\r\n\r\n❤️ Tragen Sie Ihre Werte auf der Schulter.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '100',
+  },
+  'EcoTote DuoPack': {
+    name_de: 'EcoTote DuoPack',
+    category_de: 'EcoTote DuoPack',
+    description_de:
+      'EcoTote Duo ist die ultimative nachhaltige Versandlösung für Fashion-E-Commerce. Wir haben Bekleidungsverpackungen neu gedacht und verschwenderisches Plastik und Papier durch ein leistungsstarkes Zwei-Schichten-System ersetzt – für den Planeten und das Premium-Gefühl Ihrer Marke.\r\n\r\nDer Duo-Vorteil\r\nZwei-Schichten-Schutz: Leichte Außentasche aus Baumwolle mit niedrigem GSM plus kompostierbarer Innenbeutel auf Maisbasis.\r\n\r\nÖko-Ersatz: Speziell entwickelt, um Einwegplastik und -papier im Bekleidungsversand zu eliminieren.\r\n\r\nMarkenbereit: Vollflächiger Druck für hochsichtbare Firmenlogos.\r\n\r\nWiederverwendbar und verschenkbar: Eine attraktive, funktionale Tasche, die Kunden lange nach der Lieferung behalten.\r\n\r\nIndividuelle Spezifikationen: In verschiedenen Stilen, Farben und Abmessungen – von Lingerie bis zu schwerer Oberbekleidung.\r\n\r\n🌱 Nachhaltigkeit bei jeder Bestellung auspacken.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  'The Sommelier’s Social Tote': {
+    name_de: 'Die Sommelier Social Tragetasche',
+    category_de: 'Organized Living Serie',
+    description_de:
+      'Diese vielseitige Canvas-Tragetasche ist der ideale Begleiter für Weinliebhaber und organisierte Einkäufer. Charmante Ästhetik trifft auf funktionale Innentrenner – Flaschen bleiben sicher, Essentials stehen aufrecht, und Sie setzen ein schönes, umweltfreundliches Zeichen.\r\n\r\nHauptmerkmale\r\nIntelligente Innentrenner: Sechs dedizierte Fächer für Weinflaschen, Gläser oder Baguettes.\r\n\r\nVerspieltes Grafikdesign: Mit Herz- und Weinreben-Motiven sowie den Slogans „Live Simple Life“ und „Simply Celebrate Life“.\r\n\r\nPremium-Naturcanvas: Langlebige, umweltfreundliche off-white Baumwolle für einen klaren, klassischen Look.\r\n\r\nDekorative Träger: Kunstvoll gemusterte Henkel für eine boutique-artige Eleganz.\r\n\r\nGeräumig und strukturiert: Breites Seitenprofil und flacher Boden halten die Tasche auch voll beladen stabil.\r\n\r\n🍷 Die perfekte Verbindung von Organisation und Feierlichkeit.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  "The Sommelier's Social Tote": {
+    name_de: 'Die Sommelier Social Tragetasche',
+    category_de: 'Organized Living Serie',
+    description_de:
+      'Diese vielseitige Canvas-Tragetasche ist der ideale Begleiter für Weinliebhaber und organisierte Einkäufer. Charmante Ästhetik trifft auf funktionale Innentrenner – Flaschen bleiben sicher, Essentials stehen aufrecht, und Sie setzen ein schönes, umweltfreundliches Zeichen.\r\n\r\nHauptmerkmale\r\nIntelligente Innentrenner: Sechs dedizierte Fächer für Weinflaschen, Gläser oder Baguettes.\r\n\r\nVerspieltes Grafikdesign: Mit Herz- und Weinreben-Motiven sowie den Slogans „Live Simple Life“ und „Simply Celebrate Life“.\r\n\r\nPremium-Naturcanvas: Langlebige, umweltfreundliche off-white Baumwolle für einen klaren, klassischen Look.\r\n\r\nDekorative Träger: Kunstvoll gemusterte Henkel für eine boutique-artige Eleganz.\r\n\r\nGeräumig und strukturiert: Breites Seitenprofil und flacher Boden halten die Tasche auch voll beladen stabil.\r\n\r\n🍷 Die perfekte Verbindung von Organisation und Feierlichkeit.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  'Eco-Friendly Cotton Tiffin Tote': {
+    name_de: 'Umweltfreundliche Baumwoll-Tiffin-Tragetasche',
+    category_de: 'Gebrandete Unternehmenstaschen',
+    description_de:
+      'Tragen Sie Ihre Mahlzeiten mit Stil und gutem Gewissen. Diese Premium-Baumwolltasche ist speziell für Lunchboxen konzipiert und behält dabei ein schlankes, professionelles Erscheinungsbild. Aus schwerer, nachhaltiger Faser gefertigt – eine langlebige, wiederverwendbare Alternative zu Plastiktaschen.\r\n\r\nProdukt-Highlights\r\n100 % Bio-Baumwolle: Aus GOTS-zertifizierter Faser, schonend für den Planeten und auf Langlebigkeit ausgelegt.\r\n\r\nGeräumig und stabil: Verstärkte Nähte und breite Bodenform halten Ihr Tiffin aufrecht und sicher auf dem Weg zur Arbeit.\r\n\r\nMinimalistische Ästhetik: Klarer, zeitloser Look – vom Büro bis zum Wochenendausflug.\r\n\r\nUmweltbewusste Wahl: Vollständig biologisch abbaubar und in kompostierbarer Verpackung versendet.\r\n\r\nPflegehinweise\r\nZur Frische einfach mit einem feuchten Tuch abtupfen oder in kaltem Wasser von Hand waschen und an der Luft trocknen.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  'The Vintner’s Reserve Tote': {
+    name_de: 'Die Winzer-Reserve-Tragetasche',
+    category_de: 'Saisonale Geschenkeditionen',
+    description_de:
+      'Diese handwerkliche Weintasche vereint rustikalen Charme mit hochwertiger Funktionalität. Für anspruchsvolle Gastgeber entwickelt – mit einzigartiger Außentasche und verspieltem Weinberg-Design, das auf jeder Feier zum Gesprächsstarter wird.\r\n\r\nProdukt-Highlights\r\nIntegrierte Weinholster: Dedizierte Außentasche für schnellen Zugriff auf Ihren Lieblingsjahrgang.\r\n\r\nNautische Seilhenkel: Schwere, weiche Baumwollseil-Henkel für bequemes Tragen und einen premium, küsten-chic Look.\r\n\r\nIllustriertes Storybook-Design: Detaillierte Weinreben- und Weinberg-Grafiken mit dem Motto „CHILL. POUR. REPEAT.“\r\n\r\nZwei-Flaschen-Kapazität: Eine Flasche im Außenfach, innen Platz für eine zweite Flasche oder Snacks.\r\n\r\nVerstärkte Struktur: Schwerer Natur-Baumwoll-Canvas hält Flaschen aufrecht und sicher.\r\n\r\n🍷 Ihr Lieblingsjahrgang verdient eine bessere Reise.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  "The Vintner's Reserve Tote": {
+    name_de: 'Die Winzer-Reserve-Tragetasche',
+    category_de: 'Saisonale Geschenkeditionen',
+    description_de:
+      'Diese handwerkliche Weintasche vereint rustikalen Charme mit hochwertiger Funktionalität. Für anspruchsvolle Gastgeber entwickelt – mit einzigartiger Außentasche und verspieltem Weinberg-Design, das auf jeder Feier zum Gesprächsstarter wird.\r\n\r\nProdukt-Highlights\r\nIntegrierte Weinholster: Dedizierte Außentasche für schnellen Zugriff auf Ihren Lieblingsjahrgang.\r\n\r\nNautische Seilhenkel: Schwere, weiche Baumwollseil-Henkel für bequemes Tragen und einen premium, küsten-chic Look.\r\n\r\nIllustriertes Storybook-Design: Detaillierte Weinreben- und Weinberg-Grafiken mit dem Motto „CHILL. POUR. REPEAT.“\r\n\r\nZwei-Flaschen-Kapazität: Eine Flasche im Außenfach, innen Platz für eine zweite Flasche oder Snacks.\r\n\r\nVerstärkte Struktur: Schwerer Natur-Baumwoll-Canvas hält Flaschen aufrecht und sicher.\r\n\r\n🍷 Ihr Lieblingsjahrgang verdient eine bessere Reise.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  'Corporate Tote Bag': {
+    name_de: 'Unternehmens-Tragetasche',
+    category_de: 'Gebrandete Unternehmenstaschen',
+    description_de:
+      'Stärken Sie Ihre Marke mit Premium-Tragetaschen aus GOTS-zertifizierter Bio-Baumwolle für moderne Unternehmen. Wir verbinden professionelle Langlebigkeit mit tiefer Umweltverantwortung – für einen bleibenden Eindruck ohne ökologischen Fußabdruck.\r\n\r\nUnternehmenslösungen\r\nGOTS-zertifiziert: 100 % Bio-Baumwolle nach höchsten globalen Standards.\r\n\r\nIndividuelles Branding: Hochwertiger Logo-Druck und Stickoptionen.\r\n\r\nSkalierbare Größen: Von kleinen Event-Geschenktaschen bis zu großen Pendler-Totes.\r\n\r\nProfessionelle Farbpalette: Vielfältige Farben passend zu Ihrer Markenidentität.\r\n\r\nEthische Beschaffung: Vollständig nachhaltige Lieferkette für Ihre CSR-Ziele.\r\n\r\n🏢 Die nachhaltige Wahl für Events, Geschenke und Retail.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  'The Nomad Luxe Tote': {
+    name_de: 'Die Nomad Luxe Tragetasche',
+    category_de: 'Faltbare Reisetaschen',
+    description_de:
+      'Diese sophistizierte Tragetasche verbindet robuste Langlebigkeit mit hochwertiger Ästhetik – der perfekte professionelle Begleiter. Schwerer Canvas-Körper mit verstärktem Boden: nahtloser Übergang vom Büro zum Wochenendtrip bei strukturiertem Premium-Look.\r\n\r\nProdukt-Highlights\r\nMaterialmix-Design: Langlebiger cremefarbener Baumwoll-Canvas mit reicher, veganer Lederoptik an Boden und Henkeln.\r\n\r\nVerstärkter Boden: Stabiler brauner Boden schützt den Inhalt und hält die Tasche aufrecht.\r\n\r\nFaltbar und reisebereit: Trotz strukturierter Optik lässt sich der weiche Canvas flach falten.\r\n\r\nBequemes Tragen: Doppellagige Henkel für maximale Festigkeit und angenehmen Griff.\r\n\r\nDezentes Branding: Passend geprägtes Patch für ein klares, minimalistisches Finish.\r\n\r\n💼 Die Schnittstelle von robuster Nutzung und verfeinertem Stil.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '',
+  },
+  'Classic Cotton Tote Bag': {
+    name_de: 'Klassische Baumwoll-Tragetasche',
+    category_de: 'Klassische Baumwolltaschen',
+    description_de:
+      'Veredeln Sie Ihren Alltag mit unserer Premium-Kollektion aus 100 % Bio-Baumwoll-Tragetaschen. Für bewusste Käufer entwickelt – zeitloser Stil trifft auf moderne Nachhaltigkeit, damit Sie Einwegplastik endgültig hinter sich lassen.\r\n\r\nWarum unsere Totes?\r\nUmweltfreundlich: Aus nachhaltig bezogener, biologisch abbaubarer Baumwolle.\r\n\r\nVielseitige Stile: Von klassischen Shoppern bis zu trendigen Schultertaschen.\r\n\r\nLebendige Farbpalette: Breites Spektrum an Farben für jeden Look.\r\n\r\nPassgenaue Größen: Mehrere Größen oder individuelle Maße auf Anfrage.\r\n\r\nAuf Langlebigkeit gebaut: Verstärkte Nähte und schwerer Stoff für maximale Haltbarkeit.\r\n\r\n💡 Nachhaltiges Leben war noch nie so schön.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '100',
+  },
+  'Classic Cotton Tote Bag ': {
+    name_de: 'Klassische Baumwoll-Tragetasche',
+    category_de: 'Klassische Baumwolltaschen',
+    description_de:
+      'Veredeln Sie Ihren Alltag mit unserer Premium-Kollektion aus 100 % Bio-Baumwoll-Tragetaschen. Für bewusste Käufer entwickelt – zeitloser Stil trifft auf moderne Nachhaltigkeit, damit Sie Einwegplastik endgültig hinter sich lassen.\r\n\r\nWarum unsere Totes?\r\nUmweltfreundlich: Aus nachhaltig bezogener, biologisch abbaubarer Baumwolle.\r\n\r\nVielseitige Stile: Von klassischen Shoppern bis zu trendigen Schultertaschen.\r\n\r\nLebendige Farbpalette: Breites Spektrum an Farben für jeden Look.\r\n\r\nPassgenaue Größen: Mehrere Größen oder individuelle Maße auf Anfrage.\r\n\r\nAuf Langlebigkeit gebaut: Verstärkte Nähte und schwerer Stoff für maximale Haltbarkeit.\r\n\r\n💡 Nachhaltiges Leben war noch nie so schön.',
+    material_de: '100 % GOTS-zertifizierte Baumwolle',
+    print_type_de: 'Wasserbasierte Farben',
+    packaging_de: 'FSC-zertifizierte Anhänger und Etiketten',
+    moq_de: '100',
+  },
+};

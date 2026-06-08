@@ -3,11 +3,12 @@ import { Mail, Phone, Send, CheckCircle } from 'lucide-react';
 import { apiClient } from '../../lib/api';
 import { useLocalizedSectionContent } from '../../hooks/useLocalizedSectionContent';
 import { useI18n } from '../../contexts/I18nContext';
+import { MAIN_CONTACT_EMAIL } from '../../lib/brand';
 
 const contactInfoFallback = {
   heading: 'Get in Touch',
   subheading: "Ready to start your sustainable journey? Let's create something amazing together.",
-  email_primary: 'abhishek.deolalikar@gmail.com',
+  email_primary: MAIN_CONTACT_EMAIL,
   phone: '+91 7020631149',
   whatsapp_number: '+91 7020631149',
   whatsapp_message: "Hi Cottonunique! I’d like to know more about your tote bags.",

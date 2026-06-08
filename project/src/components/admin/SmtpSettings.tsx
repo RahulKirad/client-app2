@@ -194,7 +194,7 @@ export default function SmtpSettings() {
             className={fieldClass}
             value={emailUser}
             onChange={(e) => setEmailUser(e.target.value)}
-            placeholder="you@gmail.com"
+            placeholder="cottoniq.co@gmail.com"
             autoComplete="off"
             required
           />
