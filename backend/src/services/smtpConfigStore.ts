@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 import crypto from 'crypto';
+import { MAIN_EMAIL } from '../constants/email';
 
 const TABLE = 'smtp_settings';
 
@@ -93,7 +94,20 @@ export async function ensureSmtpSettingsTable(mysqlPool: mysql.Pool = getSmtpSet
   `);
   const [rows] = await mysqlPool.execute(`SELECT COUNT(*) as c FROM ${TABLE}`);
   if (Array.isArray(rows) && (rows as { c: number }[])[0].c === 0) {
-    await mysqlPool.execute(`INSERT INTO ${TABLE} (id, email_user) VALUES (1, '')`);
+    await mysqlPool.execute(`INSERT INTO ${TABLE} (id, email_user) VALUES (1, ?)`, [MAIN_EMAIL]);
+  } else {
+    await mysqlPool.execute(
+      `UPDATE ${TABLE}
+       SET email_user = ?
+       WHERE id = 1
+         AND (email_user = '' OR LOWER(email_user) IN (?, ?, ?))`,
+      [
+        MAIN_EMAIL,
+        'abhishek.deolalikar@gmail.com',
+        'cottonunique.co@gmail.com',
+        'info@cottonunique.com',
+      ]
+    );
   }
 }
 
