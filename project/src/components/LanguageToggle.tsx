@@ -20,7 +20,7 @@ export default function LanguageToggle({ className = '' }: LanguageToggleProps) 
             key={lang}
             type="button"
             onClick={() => setLocale(lang)}
-            className={`min-w-[2.5rem] px-3 py-1.5 text-xs font-bold uppercase tracking-wide rounded-md transition-all duration-200 ${
+            className={`min-w-[2rem] sm:min-w-[2.5rem] px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wide rounded-md transition-all duration-200 ${
               active
                 ? 'bg-[var(--beige-700)] text-white shadow-sm scale-[1.02]'
                 : 'text-[var(--text-color)] hover:bg-[var(--beige-200)] hover:text-[var(--beige-800)]'

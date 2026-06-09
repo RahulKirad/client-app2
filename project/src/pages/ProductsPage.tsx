@@ -15,6 +15,30 @@ import { localizeProduct } from '../lib/localizeProduct';
 
 const PRODUCTS_PER_PAGE = 8;
 
+type ProductGridRow =
+  | { type: 'pair'; items: Product[] }
+  | { type: 'single'; items: [Product] };
+
+/** Mobile rhythm: two cards, then one full-width card, repeating. */
+function buildAlternatingProductRows(products: Product[]): ProductGridRow[] {
+  const rows: ProductGridRow[] = [];
+  let i = 0;
+  while (i < products.length) {
+    if (i + 1 < products.length) {
+      rows.push({ type: 'pair', items: products.slice(i, i + 2) });
+      i += 2;
+      if (i < products.length) {
+        rows.push({ type: 'single', items: [products[i]] });
+        i += 1;
+      }
+    } else {
+      rows.push({ type: 'single', items: [products[i]] });
+      i += 1;
+    }
+  }
+  return rows;
+}
+
 type CategoryKey =
   | 'All'
   | 'Classic Cotton Totes'
@@ -39,8 +63,7 @@ const productsPageCopy = {
     searchLabel: 'Search products',
     searchPlaceholder:
       'Search products — name, material, MOQ, specs, or any word (matches whole catalog)',
-    searchHint:
-      'Type a word to jump to results below. If only one product matches, press Enter to open it.',
+    searchPlaceholderShort: 'Search products…',
     filterByCategory: 'Filter by category',
     filters: 'Filters',
     showFilters: 'Show filters',
@@ -52,9 +75,12 @@ const productsPageCopy = {
     sortPriceDesc: 'Price High-Low',
     sortFeatured: 'Featured First',
     showingZero: 'Showing 0 products',
+    showingZeroShort: '0 products',
     showingRange: (from: number, to: number, total: number) =>
       `Showing ${from}–${to} of ${total} products`,
+    showingRangeShort: (from: number, to: number, total: number) => `${from}–${to} of ${total}`,
     pageOf: (page: number, totalPages: number) => ` · Page ${page} of ${totalPages}`,
+    pageOfShort: (page: number, totalPages: number) => ` · ${page}/${totalPages}`,
     noProducts: 'No products found',
     noProductsHint: 'Try adjusting your filters or search to see more products.',
     paginationLabel: 'Product list pagination',
@@ -65,6 +91,12 @@ const productsPageCopy = {
     ctaBody: 'Contact us for samples, custom branding, or bulk orders',
     ctaButton: 'Get in Touch',
     requestSample: 'Request Sample',
+    requestSampleShort: 'Sample',
+    listMaterial: 'Material',
+    listPrint: 'Print',
+    listMoq: 'MOQ',
+    listPackaging: 'Packaging',
+    viewDetails: 'View details',
     seoTitle: 'Sustainable Tote Bags Catalog & Wholesale MOQs',
     seoDescription:
       'Browse Cottonunique GOTS-certified tote bags: classic cotton totes, foldable travel bags, corporate branding, and seasonal gift editions. Request samples or bulk quotes.',
@@ -84,8 +116,7 @@ const productsPageCopy = {
     searchLabel: 'Produkte suchen',
     searchPlaceholder:
       'Produkte suchen — Name, Material, MOQ, Spezifikationen oder ein beliebiges Wort (durchsucht den gesamten Katalog)',
-    searchHint:
-      'Geben Sie ein Wort ein, um zu den Ergebnissen zu springen. Wenn nur ein Produkt passt, drücken Sie Enter, um es zu öffnen.',
+    searchPlaceholderShort: 'Produkte suchen…',
     filterByCategory: 'Nach Kategorie filtern',
     filters: 'Filter',
     showFilters: 'Filter anzeigen',
@@ -97,9 +128,12 @@ const productsPageCopy = {
     sortPriceDesc: 'Preis absteigend',
     sortFeatured: 'Empfohlene zuerst',
     showingZero: '0 Produkte angezeigt',
+    showingZeroShort: '0 Produkte',
     showingRange: (from: number, to: number, total: number) =>
       `Zeige ${from}–${to} von ${total} Produkten`,
+    showingRangeShort: (from: number, to: number, total: number) => `${from}–${to} von ${total}`,
     pageOf: (page: number, totalPages: number) => ` · Seite ${page} von ${totalPages}`,
+    pageOfShort: (page: number, totalPages: number) => ` · ${page}/${totalPages}`,
     noProducts: 'Keine Produkte gefunden',
     noProductsHint: 'Passen Sie Filter oder Suche an, um mehr Produkte zu sehen.',
     paginationLabel: 'Seitennavigation der Produktliste',
@@ -110,6 +144,12 @@ const productsPageCopy = {
     ctaBody: 'Kontaktieren Sie uns für Muster, individuelles Branding oder Großbestellungen',
     ctaButton: 'Kontakt aufnehmen',
     requestSample: 'Muster anfordern',
+    requestSampleShort: 'Muster',
+    listMaterial: 'Material',
+    listPrint: 'Druck',
+    listMoq: 'MOQ',
+    listPackaging: 'Verpackung',
+    viewDetails: 'Details ansehen',
     seoTitle: 'Nachhaltige Tragetaschen – Katalog & Großhandels-MOQs',
     seoDescription:
       'Entdecken Sie GOTS-zertifizierte Cottonunique Tragetaschen: klassische Baumwolltaschen, faltbare Reisetaschen, Unternehmens-Branding und saisonale Geschenkeditionen. Muster oder Großmengen-Angebote anfragen.',
@@ -186,6 +226,63 @@ function productMatchesSearchQuery(p: Product, rawQuery: string): boolean {
   });
 }
 
+type ProductsPageCopy = (typeof productsPageCopy)['en'];
+
+function ProductResultsSummary({
+  copy,
+  total,
+  pageStart,
+  safePage,
+  totalPages,
+  variant = 'inline',
+  className = '',
+}: {
+  copy: ProductsPageCopy;
+  total: number;
+  pageStart: number;
+  safePage: number;
+  totalPages: number;
+  variant?: 'inline' | 'panel';
+  className?: string;
+}) {
+  const from = pageStart + 1;
+  const to = Math.min(pageStart + PRODUCTS_PER_PAGE, total);
+
+  const wrapperClass =
+    variant === 'panel'
+      ? 'border-t border-gray-100 px-2 pt-3 pb-1.5 sm:px-0 sm:pt-3.5 sm:pb-2'
+      : 'px-2 pt-2.5 pb-1.5 sm:px-0 sm:pt-3 sm:pb-2';
+
+  return (
+    <div
+      className={`products-results-summary ${wrapperClass} ${className}`.trim()}
+      aria-live="polite"
+    >
+      <p className="text-[10px] font-medium leading-snug text-[#5A6C7D] sm:text-sm">
+        {total === 0 ? (
+          <>
+            <span className="sm:hidden">{copy.showingZeroShort}</span>
+            <span className="hidden sm:inline">{copy.showingZero}</span>
+          </>
+        ) : (
+          <>
+            <span className="sm:hidden">
+              {copy.showingRangeShort(from, to, total)}
+              {totalPages > 1 ? copy.pageOfShort(safePage, totalPages) : ''}
+            </span>
+            <span className="hidden sm:inline">
+              {copy.showingRange(from, to, total)}
+              {totalPages > 1 ? (
+                <span className="text-[#5A6C7D]/80">{copy.pageOf(safePage, totalPages)}</span>
+              ) : null}
+            </span>
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
 export default function ProductsPage() {
   const navigate = useNavigate();
   const { effectiveLocale, t } = useI18n();
@@ -199,11 +296,15 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sampleProduct, setSampleProduct] = useState<Product | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [compactChrome, setCompactChrome] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches,
+  );
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) {
-      setFiltersOpen(true);
-    }
+    const mq = window.matchMedia('(max-width: 639px)');
+    const onChange = () => setCompactChrome(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
   }, []);
 
   const sortOptions = [
@@ -321,131 +422,150 @@ export default function ProductsPage() {
       <Header />
       
       <main className="pt-20 bg-slate-50">
-        {/* Top Bar */}
-        <section className="bg-white border-b border-gray-200 py-5">
-          <div className="relative flex min-h-[2.75rem] w-full items-center justify-between gap-4 px-4 sm:min-h-0 sm:px-6 lg:px-8">
-            <Link
-              to="/"
-              className="relative z-10 inline-flex shrink-0 items-center transition-colors font-semibold text-sm bg-white px-3 py-2 rounded-full border-2 shadow-sm hover:shadow-md sm:px-4"
-              style={{color: 'var(--beige-700)', borderColor: 'var(--beige-600)'}}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--beige-800)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--beige-700)'}
-            >
-              <ArrowLeft size={18} className="mr-2 hidden sm:inline" aria-hidden />
-              <span className="sm:hidden">{copy.backShort}</span>
-              <span className="hidden sm:inline">{copy.backHome}</span>
-            </Link>
+        {/* Page header + search / filters */}
+        <section className="bg-white border-b border-gray-200">
+          <div className="w-full space-y-2 px-4 py-2 sm:space-y-5 sm:px-6 sm:py-5 lg:px-8">
+            <div className="relative flex min-h-[2rem] w-full items-center justify-between gap-2 sm:min-h-0 sm:gap-4">
+              <Link
+                to="/"
+                className="relative z-10 inline-flex shrink-0 items-center rounded-full border-2 bg-white px-2 py-0.5 text-[11px] font-semibold shadow-sm transition-colors hover:shadow-md sm:px-4 sm:py-2 sm:text-sm"
+                style={{ color: 'var(--beige-700)', borderColor: 'var(--beige-600)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--beige-800)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--beige-700)'; }}
+              >
+                <ArrowLeft size={14} className="mr-1 hidden sm:mr-2 sm:inline sm:h-[18px] sm:w-[18px]" aria-hidden />
+                <span className="sm:hidden">{copy.backShort}</span>
+                <span className="hidden sm:inline">{copy.backHome}</span>
+              </Link>
 
-            <h1
-              className="pointer-events-none absolute left-1/2 top-1/2 w-max max-w-[calc(100%-7rem)] -translate-x-1/2 -translate-y-1/2 text-center text-xl font-bold tracking-tight text-[#2C3E50] sm:pointer-events-auto sm:static sm:max-w-none sm:translate-x-0 sm:translate-y-0 sm:text-left sm:text-2xl"
-              style={{ fontFamily: 'var(--heading-font)' }}
-            >
-              {t('nav.products') || copy.title}
-            </h1>
+              <h1
+                className="pointer-events-none absolute left-1/2 top-1/2 w-max max-w-[calc(100%-5.5rem)] -translate-x-1/2 -translate-y-1/2 text-center text-base font-bold tracking-tight text-[#2C3E50] sm:pointer-events-auto sm:static sm:max-w-none sm:translate-x-0 sm:translate-y-0 sm:text-left sm:text-2xl"
+                style={{ fontFamily: 'var(--heading-font)' }}
+              >
+                {t('nav.products') || copy.title}
+              </h1>
 
-            <div className="hidden shrink-0 text-sm font-medium text-[#5A6C7D] sm:block">
-              {copy.catalogView}
-            </div>
-          </div>
-        </section>
-
-        {/* Filters and Controls */}
-        <section className="py-6 bg-white border-b border-gray-200">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="mb-6 w-full">
-              <label htmlFor="products-search" className="sr-only">
-                {copy.searchLabel}
-              </label>
-              <div className="relative w-full">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#5A6C7D] sm:left-4"
-                  size={18}
-                  aria-hidden
-                />
-                <input
-                  id="products-search"
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                  placeholder={copy.searchPlaceholder}
-                  className="w-full rounded-xl border-2 border-gray-200 bg-gray-50/80 py-2.5 pl-10 pr-3 text-sm font-medium text-[#2C3E50] placeholder:text-[#6B7280] transition-all duration-200 focus:outline-none focus:bg-white sm:py-3.5 sm:pl-12 sm:pr-4 sm:text-base"
-                  style={{ boxShadow: 'none' }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--beige-600)';
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(232, 212, 184, 0.45)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#e5e7eb';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                  autoComplete="off"
-                  spellCheck="false"
-                />
+              <div className="hidden shrink-0 text-sm font-medium text-[#5A6C7D] sm:block">
+                {copy.catalogView}
               </div>
             </div>
 
-            {/* Filters panel (collapsible: categories, sort, view) */}
-            <div className="w-full">
-              <button
-                type="button"
-                onClick={() => setFiltersOpen((open) => !open)}
-                className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-2 text-left transition-colors hover:bg-gray-100"
-                aria-expanded={filtersOpen}
-                aria-controls="products-filters-panel"
-              >
-                <span className="flex min-w-0 flex-wrap items-center gap-2">
-                  <Filter size={16} className="shrink-0" style={{ color: 'var(--beige-700)' }} aria-hidden />
-                  <span className="text-sm font-semibold text-[#2C3E50]">{copy.filters}</span>
-                  {!filtersOpen ? (
-                    <>
-                      {selectedCategory !== 'All' ? (
-                        <span
-                          className="max-w-[8rem] truncate rounded-full px-2 py-0.5 text-[10px] font-semibold text-white sm:max-w-none sm:text-xs"
-                          style={{ backgroundColor: 'var(--beige-600)' }}
-                        >
-                          {copy.categories[selectedCategory]}
-                        </span>
-                      ) : null}
-                      <span className="truncate text-[10px] font-medium text-[#5A6C7D] sm:text-xs">
-                        {sortOptions.find((o) => o.value === sortBy)?.label}
-                      </span>
-                    </>
-                  ) : null}
-                </span>
-                <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#5A6C7D]">
-                  <span className="hidden sm:inline">{filtersOpen ? copy.hideFilters : copy.showFilters}</span>
-                  <ChevronDown
-                    size={18}
-                    className={`shrink-0 transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`}
+            <div className="w-full sm:mb-1">
+              <label htmlFor="products-search" className="sr-only">
+                {copy.searchLabel}
+              </label>
+              <div className="flex items-center gap-1.5 sm:gap-3">
+                <div className="relative min-w-0 flex-1">
+                  <Search
+                    className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#5A6C7D] sm:left-4 sm:h-[18px] sm:w-[18px]"
                     aria-hidden
                   />
-                </span>
-              </button>
+                  <input
+                    id="products-search"
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    placeholder={compactChrome ? copy.searchPlaceholderShort : copy.searchPlaceholder}
+                    className="h-8 w-full rounded-lg border border-gray-200 bg-gray-50/80 py-0 pl-8 pr-2 text-xs font-medium text-[#2C3E50] placeholder:text-[#6B7280] transition-all duration-200 focus:border-[var(--beige-600)] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[rgba(232,212,184,0.45)] sm:h-auto sm:rounded-xl sm:border-2 sm:py-3.5 sm:pl-12 sm:pr-4 sm:text-base"
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen((open) => !open)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-gray-50/80 transition-colors hover:bg-gray-100 sm:h-auto sm:w-auto sm:rounded-xl sm:px-4 sm:py-3.5"
+                  aria-expanded={filtersOpen}
+                  aria-controls="products-filters-panel"
+                  aria-label={filtersOpen ? copy.hideFilters : copy.showFilters}
+                >
+                  <Filter size={14} className="shrink-0 sm:h-4 sm:w-4" style={{ color: 'var(--beige-700)' }} aria-hidden />
+                  <span className="hidden text-sm font-semibold text-[#2C3E50] sm:inline">{copy.filters}</span>
+                  <ChevronDown
+                    size={14}
+                    className={`hidden shrink-0 text-[#5A6C7D] transition-transform duration-200 sm:block sm:h-[18px] sm:w-[18px] ${filtersOpen ? 'rotate-180' : ''}`}
+                    aria-hidden
+                  />
+                </button>
+              </div>
+
+              {!filtersOpen ? (
+                <ProductResultsSummary
+                  copy={copy}
+                  total={filteredAndSortedProducts.length}
+                  pageStart={pageStart}
+                  safePage={safePage}
+                  totalPages={totalPages}
+                  variant="inline"
+                />
+              ) : null}
 
               <div
                 id="products-filters-panel"
-                className={filtersOpen ? 'mt-3 space-y-4' : 'hidden'}
+                className={filtersOpen ? 'mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm sm:mt-3 sm:rounded-xl' : 'hidden'}
               >
-                <p className="text-xs leading-relaxed text-[#5A6C7D]">{copy.searchHint}</p>
+                <div className="space-y-3 p-3 sm:space-y-4 sm:p-5">
+                  <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#2C3E50]">
+                      {copy.filterByCategory}
+                    </p>
+                    <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="h-9 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-[#2C3E50] transition-all duration-200 sm:min-w-[11.5rem] sm:flex-none"
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--beige-600)';
+                          e.currentTarget.style.boxShadow = '0 0 0 2px rgba(232, 212, 184, 0.3)';
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = '#d1d5db';
+                          e.currentTarget.style.boxShadow = '';
+                        }}
+                      >
+                        {sortOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
 
-                <div>
-                  <p className="mb-2 text-xs font-semibold text-[#2C3E50]">{copy.filterByCategory}</p>
+                      <div className="flex h-9 shrink-0 overflow-hidden rounded-lg border border-gray-300">
+                        <button
+                          type="button"
+                          onClick={() => setViewMode('grid')}
+                          className={`flex h-full w-9 items-center justify-center ${viewMode === 'grid' ? 'text-white' : 'bg-white text-[#2C3E50] hover:bg-gray-50'}`}
+                          style={viewMode === 'grid' ? { backgroundColor: 'var(--beige-600)' } : {}}
+                          aria-label="Grid view"
+                        >
+                          <Grid size={18} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setViewMode('list')}
+                          className={`flex h-full w-9 items-center justify-center border-l border-gray-300 ${viewMode === 'list' ? 'text-white' : 'bg-white text-[#2C3E50] hover:bg-gray-50'}`}
+                          style={viewMode === 'list' ? { backgroundColor: 'var(--beige-600)' } : {}}
+                          aria-label="List view"
+                        >
+                          <List size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   <div
-                    className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-1.5"
+                    className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap"
                     role="group"
                     aria-label={copy.filterByCategory}
                   >
-                    {CATEGORY_OPTIONS.map(({ value }, index) => (
+                    {CATEGORY_OPTIONS.map(({ value }) => (
                       <button
                         key={value}
                         type="button"
                         onClick={() => setSelectedCategory(value)}
-                        className={`flex min-h-[2.25rem] items-center justify-center rounded-full px-2.5 py-1.5 text-center text-[11px] font-semibold leading-snug transition-all duration-300 sm:min-h-0 sm:px-3 sm:py-1.5 sm:text-xs sm:whitespace-nowrap ${
-                          index === CATEGORY_OPTIONS.length - 1 && CATEGORY_OPTIONS.length % 2 === 1
-                            ? 'col-span-2 sm:col-span-1'
-                            : ''
-                        } ${
+                        className={`inline-flex min-h-9 h-auto w-full min-w-0 items-center justify-center rounded-full px-1.5 py-1.5 text-center text-[10px] font-semibold leading-tight transition-all duration-200 sm:h-9 sm:w-auto sm:px-4 sm:py-0 sm:text-xs ${
                           selectedCategory === value
                             ? 'text-white shadow-md'
                             : 'bg-gray-100 text-[#2C3E50] hover:bg-gray-200'
@@ -456,73 +576,22 @@ export default function ProductsPage() {
                       </button>
                     ))}
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-[#2C3E50] transition-all duration-200 sm:min-w-[11rem] sm:flex-none"
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = 'var(--beige-600)';
-                      e.currentTarget.style.boxShadow = '0 0 0 2px rgba(232, 212, 184, 0.3)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = '#d1d5db';
-                      e.currentTarget.style.boxShadow = '';
-                    }}
-                  >
-                    {sortOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <div className="flex shrink-0 overflow-hidden rounded-lg border border-gray-300">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 ${viewMode === 'grid' ? 'text-white' : 'bg-white text-[#2C3E50] hover:bg-gray-50'}`}
-                      style={viewMode === 'grid' ? { backgroundColor: 'var(--beige-600)' } : {}}
-                      aria-label="Grid view"
-                    >
-                      <Grid size={20} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('list')}
-                      className={`border-l border-gray-300 p-2 ${viewMode === 'list' ? 'text-white' : 'bg-white text-[#2C3E50] hover:bg-gray-50'}`}
-                      style={viewMode === 'list' ? { backgroundColor: 'var(--beige-600)' } : {}}
-                      aria-label="List view"
-                    >
-                      <List size={20} />
-                    </button>
-                  </div>
+                  <ProductResultsSummary
+                    copy={copy}
+                    total={filteredAndSortedProducts.length}
+                    pageStart={pageStart}
+                    safePage={safePage}
+                    totalPages={totalPages}
+                    variant="panel"
+                  />
                 </div>
               </div>
             </div>
-
-            <div className="mt-4 text-sm text-[#5A6C7D] font-medium">
-              {filteredAndSortedProducts.length === 0 ? (
-                <>{copy.showingZero}</>
-              ) : (
-                <>
-                  {copy.showingRange(
-                    pageStart + 1,
-                    Math.min(pageStart + PRODUCTS_PER_PAGE, filteredAndSortedProducts.length),
-                    filteredAndSortedProducts.length
-                  )}
-                  {totalPages > 1 && (
-                    <span className="text-[#5A6C7D]/80">{copy.pageOf(safePage, totalPages)}</span>
-                  )}
-                </>
-              )}
-            </div>
           </div>
-        </section>      
-  {/* Products Section */}
-        <section id="products-list" className="py-12 bg-gray-50 scroll-mt-20">
+        </section>
+        {/* Products Section */}
+        <section id="products-list" className="scroll-mt-[4.5rem] bg-gray-50 py-5 sm:scroll-mt-20 sm:py-12">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             {loading ? (
               <div className="flex justify-center items-center py-20">
@@ -536,22 +605,63 @@ export default function ProductsPage() {
               </div>
             ) : (
               <>
-                <div
-                  className={
-                    viewMode === 'grid'
-                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 auto-rows-fr'
-                      : 'space-y-6'
-                  }
-                >
-                  {paginatedProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onRequestSample={setSampleProduct}
-                      requestSampleLabel={requestSampleLabel}
-                    />
-                  ))}
-                </div>
+                {viewMode === 'grid' ? (
+                  <>
+                    <div className="flex flex-col gap-4 lg:hidden">
+                      {buildAlternatingProductRows(paginatedProducts).map((row, rowIdx) =>
+                        row.type === 'pair' ? (
+                          <div key={`pair-${rowIdx}`} className="grid grid-cols-2 gap-3">
+                            {row.items.map((product) => (
+                              <ProductCard
+                                key={product.id}
+                                product={product}
+                                onRequestSample={setSampleProduct}
+                                requestSampleLabel={requestSampleLabel}
+                                buttonText={copy.requestSampleShort}
+                                size="mobile-pair"
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div key={`single-${rowIdx}`} className="grid grid-cols-1">
+                            {row.items.map((product) => (
+                              <ProductCard
+                                key={product.id}
+                                product={product}
+                                onRequestSample={setSampleProduct}
+                                requestSampleLabel={requestSampleLabel}
+                                size="mobile-single"
+                              />
+                            ))}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                    <div className="hidden auto-rows-fr gap-8 lg:grid lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                      {paginatedProducts.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          onRequestSample={setSampleProduct}
+                          requestSampleLabel={requestSampleLabel}
+                          size="desktop"
+                        />
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm divide-y divide-gray-200">
+                    {paginatedProducts.map((product) => (
+                      <ProductListRow
+                        key={product.id}
+                        product={product}
+                        onRequestSample={setSampleProduct}
+                        requestSampleLabel={requestSampleLabel}
+                        copy={copy}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 {totalPages > 1 && (
                   <nav
@@ -603,21 +713,24 @@ export default function ProductsPage() {
         </section>
 
         {/* Contact CTA */}
-        <section className="py-16" style={{backgroundColor: 'var(--beige-600)'}}>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">
+        <section
+          className="py-8 sm:py-12 lg:py-16"
+          style={{ backgroundColor: 'var(--beige-600)' }}
+        >
+          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+            <h2 className="mb-2 text-xl font-bold leading-tight text-white sm:mb-3 sm:text-2xl lg:mb-4 lg:text-3xl">
               {copy.ctaTitle}
             </h2>
-            <p className="text-xl text-white/90 mb-8">
+            <p className="mx-auto mb-4 max-w-md text-sm leading-snug text-white/90 sm:mb-6 sm:max-w-none sm:text-lg sm:leading-relaxed lg:mb-8 lg:text-xl">
               {copy.ctaBody}
             </p>
             <button
               type="button"
               onClick={() => goToHomeContactSection(navigate)}
-              className="inline-flex items-center space-x-2 bg-white px-8 py-3 rounded-full hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white px-5 py-2 text-sm font-semibold shadow-md transition-all duration-300 hover:bg-gray-100 hover:shadow-lg sm:gap-2 sm:px-8 sm:py-3 sm:text-base sm:shadow-lg sm:hover:shadow-xl"
               style={{ color: 'var(--beige-700)' }}
             >
-              <ShoppingBag size={20} aria-hidden />
+              <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
               <span>{copy.ctaButton}</span>
             </button>
           </div>
@@ -635,25 +748,61 @@ export default function ProductsPage() {
   );
 }
 
+const PRODUCT_CARD_SIZE = {
+  'mobile-pair': {
+    shell:
+      'h-[220px] min-[360px]:h-[240px] min-[400px]:h-[250px] rounded-xl shadow-md',
+    content: 'p-3',
+    title: 'mb-1 text-sm font-bold leading-snug min-[400px]:text-base',
+    button:
+      'mt-1.5 rounded-md border-0 font-semibold cursor-pointer inline-flex items-center justify-center transition-all duration-300 !py-1 !px-2 text-[10px] leading-tight min-[400px]:!py-1.5 min-[400px]:!px-2.5 min-[400px]:text-[11px]',
+  },
+  'mobile-single': {
+    shell:
+      'h-[280px] min-[360px]:h-[300px] min-[400px]:h-[320px] rounded-xl shadow-md',
+    content: 'p-4',
+    title: 'mb-2 text-base font-bold leading-snug',
+    button: 'mt-3 !px-3 !py-2.5 text-xs',
+  },
+  desktop: {
+    shell:
+      'rounded-2xl shadow-lg transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-2xl md:h-[360px] lg:h-[400px] xl:h-[440px]',
+    content: 'p-5 lg:p-6',
+    title: 'mb-2 text-xl font-bold leading-snug lg:text-2xl xl:text-3xl',
+    button: 'mt-4 !px-4 !py-2.5 text-sm lg:mt-5 lg:!py-3 lg:text-base',
+  },
+} as const;
+
 // Enhanced Product Card Component with Image Background Style
 function ProductCard({
   product,
   onRequestSample,
   requestSampleLabel,
+  buttonText,
+  size = 'desktop',
 }: {
   product: Product;
   onRequestSample: (p: Product) => void;
   requestSampleLabel: string;
+  buttonText?: string;
+  size?: keyof typeof PRODUCT_CARD_SIZE;
 }) {
+  const styles = PRODUCT_CARD_SIZE[size];
+  const isDesktop = size === 'desktop';
+  const isMobilePair = size === 'mobile-pair';
+  const displayButtonLabel = buttonText ?? requestSampleLabel;
+
   return (
     <Link to={productPath(product)} className="block">
-      <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 h-[500px] flex flex-col group cursor-pointer">
+      <div
+        className={`group relative flex w-full cursor-pointer flex-col overflow-hidden transition-all duration-500 group-hover:shadow-xl ${styles.shell}`}
+      >
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
           src={resolveMediaUrl(product.image_url)}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className={`h-full w-full object-cover transition-transform duration-500 ${isDesktop ? 'group-hover:scale-110' : 'group-hover:scale-105'}`}
           width={IMG.product.width}
           height={IMG.product.height}
           loading="lazy"
@@ -661,28 +810,33 @@ function ProductCard({
       </div>
 
       {/* Dark Gradient Overlay - Lighter by default, darker on hover */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent group-hover:from-black/85 group-hover:via-black/70 group-hover:to-transparent transition-all duration-500 pointer-events-none" 
+      <div
+        className="absolute inset-0 pointer-events-none transition-all duration-500"
         style={{
-          background: 'linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 30%, rgba(0, 0, 0, 0.1) 50%, transparent 100%)'
+          background:
+            'linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 30%, rgba(0, 0, 0, 0.1) 50%, transparent 100%)',
         }}
       />
-      <div 
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.7) 40%, rgba(0, 0, 0, 0.3) 60%, transparent 100%)'
-        }}
-      />
+      {isDesktop ? (
+        <div
+          className="absolute inset-0 opacity-0 transition-opacity duration-500 pointer-events-none group-hover:opacity-100"
+          style={{
+            background:
+              'linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.7) 40%, rgba(0, 0, 0, 0.3) 60%, transparent 100%)',
+          }}
+        />
+      ) : null}
 
       {/* Content Overlay */}
-      <div className="relative z-10 flex flex-col h-full justify-end p-6">
+      <div className={`relative z-10 flex h-full flex-col justify-end ${styles.content}`}>
         {/* Title - Always Visible */}
-        <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 drop-shadow-lg">
+        <h3 className={`line-clamp-2 text-white drop-shadow-lg ${styles.title}`}>
           {product.name}
         </h3>
 
-        {/* Description - Hidden by default, appears on hover */}
-        <div className="overflow-hidden">
-          <p className="text-white/90 text-sm sm:text-base mb-4 drop-shadow-md leading-relaxed transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100 max-h-0 group-hover:max-h-32">
+        {/* Description - desktop hover only */}
+        <div className={`overflow-hidden ${isDesktop ? 'block' : 'hidden'}`}>
+          <p className="mb-4 max-h-0 translate-y-4 text-sm leading-relaxed text-white/90 opacity-0 drop-shadow-md transition-all delay-100 duration-500 group-hover:max-h-32 group-hover:translate-y-0 group-hover:opacity-100 sm:text-base">
             {htmlToPlainText(product.description)}
           </p>
         </div>
@@ -695,16 +849,105 @@ function ProductCard({
             e.stopPropagation();
             onRequestSample(product);
           }}
-          className="w-full btn-cta-primary mt-5"
+          className={`w-full ${isMobilePair ? styles.button : `btn-cta-primary ${styles.button}`}`}
           style={{backgroundColor: 'rgba(255, 255, 255, 0.95)', color: '#78350F'}}
-          onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.transform = 'translateY(-2px)';}}
-          onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(0)';}}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'white';
+            if (!isMobilePair) e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+            if (!isMobilePair) e.currentTarget.style.transform = 'translateY(0)';
+          }}
           aria-label={requestSampleLabel}
         >
-          {requestSampleLabel}
+          {displayButtonLabel}
         </button>
       </div>
       </div>
     </Link>
+  );
+}
+
+function ProductListRow({
+  product,
+  onRequestSample,
+  requestSampleLabel,
+  copy,
+}: {
+  product: Product;
+  onRequestSample: (p: Product) => void;
+  requestSampleLabel: string;
+  copy: (typeof productsPageCopy)['en'];
+}) {
+  const specLines = [
+    product.material ? { label: copy.listMaterial, value: product.material } : null,
+    product.print_type ? { label: copy.listPrint, value: product.print_type } : null,
+    product.moq ? { label: copy.listMoq, value: product.moq } : null,
+    product.packaging ? { label: copy.listPackaging, value: product.packaging } : null,
+  ].filter((line): line is { label: string; value: string } => line !== null);
+
+  const showPrice = Number(product.price) > 0;
+
+  return (
+    <article className="flex items-stretch gap-3 px-3 py-3 transition-colors hover:bg-gray-50/80 sm:gap-4 sm:px-5 sm:py-3.5">
+      <Link to={productPath(product)} className="shrink-0 self-center">
+        <img
+          src={resolveMediaUrl(product.image_url)}
+          alt={product.name}
+          className="h-[72px] w-[72px] rounded-md border border-gray-100 bg-gray-50 object-cover sm:h-20 sm:w-20"
+          width={IMG.product.width}
+          height={IMG.product.height}
+          loading="lazy"
+        />
+      </Link>
+
+      <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-5">
+        <div className="min-w-0 flex-1">
+          <Link to={productPath(product)} className="group block">
+            <h3 className="line-clamp-2 text-sm font-bold leading-snug text-[#2C3E50] group-hover:underline sm:text-base">
+              {product.name}
+            </h3>
+          </Link>
+          <p className="mt-0.5 truncate text-xs font-medium text-[#5A6C7D]">{product.category}</p>
+
+          {specLines.length > 0 ? (
+            <ul className="mt-1.5 space-y-0.5">
+              {specLines.slice(0, 3).map((line) => (
+                <li key={line.label} className="text-[11px] leading-tight text-[#5A6C7D] sm:text-xs">
+                  <span className="font-semibold text-[#2C3E50]">{line.label}:</span>{' '}
+                  <span>{line.value}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end justify-center gap-2 self-center">
+          {showPrice ? (
+            <p className="text-base font-bold tabular-nums text-[#2C3E50] sm:text-lg">
+              ${Number(product.price).toFixed(2)}
+            </p>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={() => onRequestSample(product)}
+            className="inline-flex h-9 items-center justify-center rounded-lg px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:opacity-90"
+            style={{ backgroundColor: 'var(--beige-600)' }}
+            aria-label={requestSampleLabel}
+          >
+            {requestSampleLabel}
+          </button>
+
+          <Link
+            to={productPath(product)}
+            className="text-[11px] font-semibold text-[#5A6C7D] underline-offset-2 hover:text-[#2C3E50] hover:underline sm:text-xs"
+          >
+            {copy.viewDetails}
+          </Link>
+        </div>
+      </div>
+    </article>
   );
 }
