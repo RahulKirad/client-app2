@@ -5,9 +5,12 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Force non-www
+# Force non-www (.com and .de)
 RewriteCond %{HTTP_HOST} ^www\.cottonunique\.com [NC]
 RewriteRule ^(.*)$ https://cottonunique.com/$1 [L,R=301]
+
+RewriteCond %{HTTP_HOST} ^www\.cottonunique\.de [NC]
+RewriteRule ^(.*)$ https://cottonunique.de/$1 [L,R=301]
 
 # Same-origin API — browser calls /api on this host; PHP forwards to Node on the server (no CORS).
 # Deploy this .htaccess + api-proxy.php on cottonunique.de as well.

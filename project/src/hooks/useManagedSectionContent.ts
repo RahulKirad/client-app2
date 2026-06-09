@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { apiClient, CONTENT_UPDATED_EVENT } from '../lib/api';
 
 function parseContent(value: unknown): Record<string, unknown> | null {
@@ -44,44 +44,55 @@ export function useManagedSectionContent<T extends Record<string, unknown>>(
   sectionKey: string,
   fallback: T
 ): ManagedSectionContentResult<T> {
+  const fallbackRef = useRef(fallback);
+  fallbackRef.current = fallback;
+
   const [content, setContent] = useState<T>(fallback);
   const [version, setVersion] = useState('');
+  const lastFetchAtRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
 
-    const fetchSection = () => {
+    const fetchSection = (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastFetchAtRef.current < 30_000) {
+        return;
+      }
+      lastFetchAtRef.current = now;
+
       apiClient
         .getContentSection(sectionKey)
         .then((section) => {
           if (cancelled) return;
+          const fb = fallbackRef.current;
           const parsed = parseContent(section?.content);
           if (!parsed) {
-            setContent(fallback);
+            setContent(fb);
             setVersion('');
             return;
           }
           const source = sectionKey === 'hero' ? normalizeHeroSlidesField(parsed) : parsed;
-          setContent({ ...fallback, ...(source as Partial<T>) });
+          setContent({ ...fb, ...(source as Partial<T>) });
           setVersion(String(section?.updated_at ?? Date.now()));
         })
         .catch(() => {
           if (!cancelled) {
-            setContent(fallback);
+            setContent(fallbackRef.current);
             setVersion('');
           }
         });
     };
 
-    fetchSection();
+    fetchSection(true);
 
-    const onFocus = () => fetchSection();
+    const onFocus = () => fetchSection(false);
     window.addEventListener('focus', onFocus);
 
     const onContentUpdated = (e: Event) => {
       const detail = (e as CustomEvent<{ sectionKey?: string }>).detail;
       if (!detail?.sectionKey || detail.sectionKey === sectionKey) {
-        fetchSection();
+        fetchSection(true);
       }
     };
     window.addEventListener(CONTENT_UPDATED_EVENT, onContentUpdated);
@@ -91,7 +102,7 @@ export function useManagedSectionContent<T extends Record<string, unknown>>(
       window.removeEventListener('focus', onFocus);
       window.removeEventListener(CONTENT_UPDATED_EVENT, onContentUpdated);
     };
-  }, [sectionKey, fallback]);
+  }, [sectionKey]);
 
   return { content, version };
 }

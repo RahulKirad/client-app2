@@ -122,12 +122,14 @@ app.use(express_1.default.json());
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '3306'),
+    port: parseInt(process.env.DB_PORT || '3306', 10),
     user: process.env.DB_USER || 'root',
     database: process.env.DB_NAME || 'cottoniq_db',
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: 10000,
+    enableKeepAlive: true,
 };
 if (process.env.DB_PASSWORD !== undefined && process.env.DB_PASSWORD.trim() !== '') {
     dbConfig.password = process.env.DB_PASSWORD;
@@ -140,6 +142,11 @@ console.log('🔧 Database config:', {
     hasPassword: !!dbConfig.password
 });
 const pool = promise_1.default.createPool(dbConfig);
+const PUBLIC_READ_CACHE = 'private, max-age=60';
+function setPublicReadCache(res) {
+    res.set('Cache-Control', PUBLIC_READ_CACHE);
+    res.set('Vary', 'Origin');
+}
 async function repairEmptyProductIds() {
     let repaired = 0;
     try {
@@ -254,6 +261,7 @@ async function testConnection() {
 app.get('/api/products', async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT * FROM products WHERE is_active = TRUE ORDER BY created_at DESC');
+        setPublicReadCache(res);
         res.json(rows);
     }
     catch (error) {
@@ -372,6 +380,35 @@ app.post('/api/sample-requests', async (req, res) => {
         res.status(500).json({ error: 'Failed to submit sample request' });
     }
 });
+function buildPublicContentSection(row) {
+    const sectionKey = String(row.section_key ?? '');
+    const parsed = (0, contentNormalize_1.parseContentColumn)(row.content);
+    let content = parsed ?? row.content;
+    if (sectionKey === 'contact') {
+        content = applyCanonicalContactPhones(content);
+    }
+    else if (parsed && sectionKey) {
+        content = (0, contentNormalize_1.normalizeSectionContent)(sectionKey, parsed);
+    }
+    return { ...row, content };
+}
+app.get('/api/content', async (_req, res) => {
+    try {
+        const [rows] = await pool.execute('SELECT * FROM content_sections WHERE is_active = TRUE ORDER BY section_key');
+        const sections = {};
+        for (const row of rows) {
+            const key = String(row.section_key ?? '');
+            if (key)
+                sections[key] = buildPublicContentSection(row);
+        }
+        setPublicReadCache(res);
+        res.json({ sections });
+    }
+    catch (error) {
+        console.error('Error fetching content sections:', error);
+        res.status(500).json({ error: 'Failed to fetch content sections' });
+    }
+});
 app.get('/api/content/:sectionKey', async (req, res) => {
     try {
         const sectionKey = String(req.params.sectionKey ?? '');
@@ -380,16 +417,8 @@ app.get('/api/content/:sectionKey', async (req, res) => {
             return res.status(404).json({ error: 'Content section not found' });
         }
         const row = rows[0];
-        res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-        const parsed = (0, contentNormalize_1.parseContentColumn)(row.content);
-        let content = parsed ?? row.content;
-        if (sectionKey === 'contact') {
-            content = applyCanonicalContactPhones(content);
-        }
-        else if (parsed && sectionKey) {
-            content = (0, contentNormalize_1.normalizeSectionContent)(sectionKey, parsed);
-        }
-        res.json({ ...row, content });
+        setPublicReadCache(res);
+        res.json(buildPublicContentSection(row));
     }
     catch (error) {
         console.error('Error fetching content:', error);
@@ -417,7 +446,7 @@ app.get('/api/chatbot/settings', async (req, res) => {
         const row = rows[0];
         const raw = row?.enabled;
         const enabled = raw === 1 || raw === true || (typeof raw === 'string' && raw.trim() === '1');
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        setPublicReadCache(res);
         res.json({
             enabled: !!enabled,
             welcomeMessage: row?.welcomeMessage ?? null,
@@ -432,7 +461,7 @@ app.get('/api/chatbot/settings', async (req, res) => {
 app.get('/api/site/settings', async (_req, res) => {
     try {
         const settings = await (0, siteSettingsStore_1.getSiteSettingsPublic)();
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        setPublicReadCache(res);
         res.json(settings);
     }
     catch (error) {
@@ -560,18 +589,23 @@ app.get('/api/health/db', async (req, res) => {
         });
     }
 });
-async function bootstrap() {
-    await ensureSampleRequestsTable();
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on port ${PORT}`);
+app.use((err, req, res, _next) => {
+    applyCorsHeaders(req, res);
+    console.error('Unhandled API error:', err);
+    if (!res.headersSent) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+function bootstrap() {
+    const host = process.env.HOST || '0.0.0.0';
+    app.listen(Number(PORT), host, () => {
+        console.log(`🚀 Server running on http://${host}:${PORT}`);
         console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || '(defaults only)'}`);
         console.log(`🔒 CORS allowlist (${allowedOriginSet.size} entries) + *.cottonunique.com / *.cottonunique.de`);
+        ensureSampleRequestsTable().catch((e) => console.error('ensureSampleRequestsTable failed (non-fatal):', e));
         testConnection();
     });
 }
-bootstrap().catch((err) => {
-    console.error('Server bootstrap failed:', err);
-    process.exit(1);
-});
+bootstrap();
 exports.default = app;
 //# sourceMappingURL=index.js.map

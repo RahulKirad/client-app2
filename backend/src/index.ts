@@ -150,14 +150,16 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // MySQL connection configuration
-const dbConfig: any = {
+const dbConfig: mysql.PoolOptions = {
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
+  port: parseInt(process.env.DB_PORT || '3306', 10),
   user: process.env.DB_USER || 'root',
   database: process.env.DB_NAME || 'cottoniq_db',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  connectTimeout: 10_000,
+  enableKeepAlive: true,
 };
 
 if (process.env.DB_PASSWORD !== undefined && process.env.DB_PASSWORD.trim() !== '') {
@@ -174,6 +176,14 @@ console.log('🔧 Database config:', {
 
 // Create connection pool
 const pool = mysql.createPool(dbConfig);
+
+/** Browser-private cache; must not be `public` — CDN would cache one CORS Origin for all sites. */
+const PUBLIC_READ_CACHE = 'private, max-age=60';
+
+function setPublicReadCache(res: Response): void {
+  res.set('Cache-Control', PUBLIC_READ_CACHE);
+  res.set('Vary', 'Origin');
+}
 
 /**
  * Rows inserted without an explicit `id` on schemas that omit DEFAULT(UUID()) end up with
@@ -307,6 +317,7 @@ app.get('/api/products', async (req: Request, res: Response) => {
     const [rows] = await pool.execute(
       'SELECT * FROM products WHERE is_active = TRUE ORDER BY created_at DESC'
     );
+    setPublicReadCache(res);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -465,7 +476,39 @@ app.post('/api/sample-requests', async (req: Request, res: Response) => {
   }
 });
 
-// Get content sections
+function buildPublicContentSection(row: Record<string, unknown>) {
+  const sectionKey = String(row.section_key ?? '');
+  const parsed = parseContentColumn(row.content);
+  let content: unknown = parsed ?? row.content;
+
+  if (sectionKey === 'contact') {
+    content = applyCanonicalContactPhones(content);
+  } else if (parsed && sectionKey) {
+    content = normalizeSectionContent(sectionKey, parsed);
+  }
+
+  return { ...row, content };
+}
+
+/** All active CMS sections in one response (fewer round-trips on homepage). */
+app.get('/api/content', async (_req: Request, res: Response) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM content_sections WHERE is_active = TRUE ORDER BY section_key'
+    );
+    const sections: Record<string, Record<string, unknown>> = {};
+    for (const row of rows as Record<string, unknown>[]) {
+      const key = String(row.section_key ?? '');
+      if (key) sections[key] = buildPublicContentSection(row);
+    }
+    setPublicReadCache(res);
+    res.json({ sections });
+  } catch (error) {
+    console.error('Error fetching content sections:', error);
+    res.status(500).json({ error: 'Failed to fetch content sections' });
+  }
+});
+
 app.get('/api/content/:sectionKey', async (req: Request, res: Response) => {
   try {
     const sectionKey = String(req.params.sectionKey ?? '');
@@ -479,18 +522,8 @@ app.get('/api/content/:sectionKey', async (req: Request, res: Response) => {
     }
 
     const row = (rows as Record<string, unknown>[])[0];
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-
-    const parsed = parseContentColumn(row.content);
-    let content: unknown = parsed ?? row.content;
-
-    if (sectionKey === 'contact') {
-      content = applyCanonicalContactPhones(content);
-    } else if (parsed && sectionKey) {
-      content = normalizeSectionContent(sectionKey, parsed);
-    }
-
-    res.json({ ...row, content });
+    setPublicReadCache(res);
+    res.json(buildPublicContentSection(row));
   } catch (error) {
     console.error('Error fetching content:', error);
     res.status(500).json({ error: 'Failed to fetch content' });
@@ -523,7 +556,7 @@ app.get('/api/chatbot/settings', async (req: Request, res: Response) => {
     const row = (rows as any[])[0];
     const raw = row?.enabled;
     const enabled = raw === 1 || raw === true || (typeof raw === 'string' && raw.trim() === '1');
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    setPublicReadCache(res);
     res.json({
       enabled: !!enabled,
       welcomeMessage: row?.welcomeMessage ?? null,
@@ -539,7 +572,7 @@ app.get('/api/chatbot/settings', async (req: Request, res: Response) => {
 app.get('/api/site/settings', async (_req: Request, res: Response) => {
   try {
     const settings = await getSiteSettingsPublic();
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    setPublicReadCache(res);
     res.json(settings);
   } catch (error) {
     console.error('Error fetching site settings:', error);
@@ -679,20 +712,29 @@ app.get('/api/health/db', async (req: Request, res: Response) => {
   }
 });
 
-// Start server (ensure sample_requests exists before accepting traffic)
-async function bootstrap() {
-  await ensureSampleRequestsTable();
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+// Ensure CORS headers are present even on unhandled errors (admin panel cross-origin calls).
+app.use((err: unknown, req: Request, res: Response, _next: () => void) => {
+  applyCorsHeaders(req, res);
+  console.error('Unhandled API error:', err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Start server immediately; run DB setup in background so Hostinger does not 408 before listen().
+function bootstrap() {
+  const host = process.env.HOST || '0.0.0.0';
+  app.listen(Number(PORT), host, () => {
+    console.log(`🚀 Server running on http://${host}:${PORT}`);
     console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || '(defaults only)'}`);
     console.log(`🔒 CORS allowlist (${allowedOriginSet.size} entries) + *.cottonunique.com / *.cottonunique.de`);
+    ensureSampleRequestsTable().catch((e) =>
+      console.error('ensureSampleRequestsTable failed (non-fatal):', e)
+    );
     testConnection();
   });
 }
 
-bootstrap().catch((err) => {
-  console.error('Server bootstrap failed:', err);
-  process.exit(1);
-});
+bootstrap();
 
 export default app;

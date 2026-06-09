@@ -5,10 +5,28 @@ import { htmlToPlainText } from './productDescriptionHtml';
 
 export const BRAND_NAME = 'Cottonunique';
 
-/** Public site origin (no trailing slash). Override with VITE_SITE_URL in production. */
+/** Build-time fallback origin (no trailing slash). */
 export const SITE_URL = (
   import.meta.env.VITE_SITE_URL || 'https://cottonunique.com'
 ).replace(/\/$/, '');
+
+export const PUBLIC_SITE_HOSTS = new Set([
+  'cottonunique.com',
+  'www.cottonunique.com',
+  'cottonunique.de',
+  'www.cottonunique.de',
+]);
+
+/** Active origin in the browser; falls back to SITE_URL during build/SSR. */
+export function resolveSiteUrl(): string {
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    if (origin && origin !== 'null') {
+      return origin.replace(/\/$/, '');
+    }
+  }
+  return SITE_URL;
+}
 
 export const DEFAULT_OG_IMAGE = '/images/logo/logo.png';
 
@@ -20,7 +38,7 @@ export function buildOrganizationJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: BRAND_NAME,
-    url: SITE_URL,
+    url: resolveSiteUrl(),
     logo: absoluteUrl(DEFAULT_OG_IMAGE),
     image: absoluteUrl(DEFAULT_OG_IMAGE),
     description:
@@ -46,7 +64,7 @@ export function buildWebSiteJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: BRAND_NAME,
-    url: SITE_URL,
+    url: resolveSiteUrl(),
     description:
       'Premium GOTS-certified sustainable cotton tote bags for corporates, NGOs, and global exporters.',
     publisher: {
@@ -71,9 +89,10 @@ export function buildTitle(primary: string): string {
 }
 
 export function absoluteUrl(path: string): string {
-  if (!path) return SITE_URL;
+  const base = resolveSiteUrl();
+  if (!path) return base;
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
 export function productPath(product: Pick<Product, 'id' | 'slug'>): string {
@@ -140,13 +159,13 @@ export function buildProductBreadcrumbJsonLd(product: Product) {
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: SITE_URL,
+        item: resolveSiteUrl(),
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'Products',
-        item: `${SITE_URL}/products`,
+        item: `${resolveSiteUrl()}/products`,
       },
       {
         '@type': 'ListItem',
@@ -166,9 +185,9 @@ export function isInternalAppHref(href: string): boolean {
   if (h.startsWith('http://') || h.startsWith('https://')) {
     try {
       const u = new URL(h);
-      const siteHost = new URL(SITE_URL).hostname;
+      const host = u.hostname.toLowerCase().replace(/^www\./, '');
       if (typeof window !== 'undefined' && u.hostname === window.location.hostname) return true;
-      return u.hostname === siteHost;
+      return PUBLIC_SITE_HOSTS.has(u.hostname.toLowerCase()) || PUBLIC_SITE_HOSTS.has(host);
     } catch {
       return false;
     }

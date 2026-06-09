@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
-import { BRAND_NAME, DEFAULT_OG_IMAGE, SITE_URL, absoluteUrl } from '../lib/seo';
+import { BRAND_NAME, DEFAULT_OG_IMAGE, absoluteUrl, resolveSiteUrl } from '../lib/seo';
 import { useI18n } from '../contexts/I18nContext';
 
 export interface PageSeoProps {
@@ -29,7 +29,7 @@ export default function PageSeo({
 }: PageSeoProps) {
   const { pathname } = useLocation();
   const { locale } = useI18n();
-  const canonical = `${SITE_URL}${pathname}`;
+  const canonical = `${resolveSiteUrl()}${pathname}`;
   const deAlt = `https://cottonunique.de${pathname}`;
   const enAlt = `https://cottonunique.com${pathname}`;
   const resolvedOgImage = ogImage

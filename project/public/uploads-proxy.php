@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 $configFile = __DIR__ . '/api-backend.config.php';
 $config = is_readable($configFile) ? require $configFile : [];
-$backendOrigin = rtrim((string) ($config['backend_origin'] ?? 'http://127.0.0.1:3001'), '/');
+$backendOrigin = rtrim((string) ($config['backend_origin'] ?? 'https://app.cottonunique.com'), '/');
 
 $path = isset($_GET['path']) ? (string) $_GET['path'] : '';
 $path = ltrim(str_replace(['..', "\0"], '', $path), '/');

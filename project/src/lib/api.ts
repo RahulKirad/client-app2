@@ -1,7 +1,9 @@
 // API client for MySQL backend
 
-/** Public storefront hosts use same-origin /api (proxied in .htaccess) to avoid CORS/CDN issues. */
-function isPublicCottonSiteHost(hostname: string): boolean {
+/** Node API host — real backend; storefront reaches it via same-origin /api PHP proxy. */
+export const PRODUCTION_API_BASE_URL = 'https://app.cottonunique.com/api';
+
+function isPublicStorefrontHost(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^www\./, '');
   if (host === 'app.cottonunique.com') return false;
   return (
@@ -21,7 +23,17 @@ function normalizeViteApiBaseUrl(): string {
 }
 
 function resolveApiBaseUrl(): string {
-  if (typeof window !== 'undefined' && isPublicCottonSiteHost(window.location.hostname)) {
+  // cottonunique.com / .de → same-origin /api (PHP proxy → app.cottonunique.com). No CORS.
+  if (typeof window !== 'undefined' && isPublicStorefrontHost(window.location.hostname)) {
+    return '/api';
+  }
+  const raw = (import.meta.env.VITE_API_URL || '').trim();
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    return raw.replace(/\/$/, '').endsWith('/api')
+      ? raw.replace(/\/$/, '')
+      : `${raw.replace(/\/$/, '')}/api`;
+  }
+  if (raw === '/api' || raw === '') {
     return '/api';
   }
   return normalizeViteApiBaseUrl();
@@ -29,19 +41,19 @@ function resolveApiBaseUrl(): string {
 
 export const API_BASE_URL = resolveApiBaseUrl();
 
-/**
- * Admin panel API base. On the public storefront host, talks directly to the Node app
- * (multipart uploads cannot be reliably proxied through PHP on shared hosting).
- */
+/** Admin uploads talk directly to Node (multipart is unreliable through PHP proxy). */
 export function getAdminApiBaseUrl(): string {
-  if (typeof window !== 'undefined' && isPublicCottonSiteHost(window.location.hostname)) {
-    return 'https://app.cottonunique.com/api';
+  if (typeof window !== 'undefined' && isPublicStorefrontHost(window.location.hostname)) {
+    return PRODUCTION_API_BASE_URL;
   }
-  return normalizeViteApiBaseUrl();
+  return API_BASE_URL.startsWith('http') ? API_BASE_URL : PRODUCTION_API_BASE_URL;
 }
 
 /** Origin for /uploads/… paths returned by the API. */
 export function getApiOrigin(): string {
+  if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
+    return API_BASE_URL.replace(/\/api\/?$/, '');
+  }
   if (API_BASE_URL.startsWith('/')) {
     return typeof window !== 'undefined' ? window.location.origin : 'https://cottonunique.com';
   }
@@ -145,10 +157,132 @@ export function resolveMediaUrl(url?: string | null, cacheBuster?: string | numb
 export const CONTENT_UPDATED_EVENT = 'cottonunique-content-updated';
 
 export function notifyContentUpdated(sectionKey?: string) {
+  invalidateContentSectionCache(sectionKey);
   if (typeof window === 'undefined') return;
   window.dispatchEvent(
     new CustomEvent(CONTENT_UPDATED_EVENT, { detail: { sectionKey } })
   );
+}
+
+const CONTENT_SECTION_CACHE_MS = 60_000;
+const contentSectionCache = new Map<string, { at: number; data: ContentSection }>();
+const contentSectionInflight = new Map<string, Promise<ContentSection>>();
+let allContentSectionsInflight: Promise<Record<string, ContentSection>> | null = null;
+let allContentSectionsCache: { at: number; data: Record<string, ContentSection> } | null = null;
+let contentBatchCooldownUntil = 0;
+
+export function invalidateContentSectionCache(sectionKey?: string) {
+  contentBatchCooldownUntil = 0;
+  if (sectionKey) {
+    contentSectionCache.delete(sectionKey);
+    contentSectionInflight.delete(sectionKey);
+    allContentSectionsCache = null;
+    allContentSectionsInflight = null;
+    return;
+  }
+  contentSectionCache.clear();
+  contentSectionInflight.clear();
+  allContentSectionsCache = null;
+  allContentSectionsInflight = null;
+}
+
+async function fetchSingleContentSection(key: string): Promise<ContentSection> {
+  const res = await fetch(`${API_BASE_URL}/content/${encodeURIComponent(key)}`);
+  if (!res.ok) {
+    throw new Error(`HTTP error! status: ${res.status}`);
+  }
+  const data = (await res.json()) as ContentSection;
+  contentSectionCache.set(key, { at: Date.now(), data });
+  return data;
+}
+
+async function loadAllContentSections(): Promise<Record<string, ContentSection>> {
+  const now = Date.now();
+  if (now < contentBatchCooldownUntil) {
+    throw new Error('Content API cooling down after recent failures');
+  }
+  if (allContentSectionsCache && now - allContentSectionsCache.at < CONTENT_SECTION_CACHE_MS) {
+    return allContentSectionsCache.data;
+  }
+  if (allContentSectionsInflight) {
+    return allContentSectionsInflight;
+  }
+
+  allContentSectionsInflight = (async () => {
+    const res = await fetch(`${API_BASE_URL}/content`);
+    if (res.status === 404) {
+      return {};
+    }
+    if (!res.ok) {
+      contentBatchCooldownUntil = Date.now() + 60_000;
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const payload = (await res.json()) as { sections?: Record<string, ContentSection> };
+    const sections = payload.sections ?? {};
+    const at = Date.now();
+    for (const [key, section] of Object.entries(sections)) {
+      contentSectionCache.set(key, { at, data: section });
+    }
+    allContentSectionsCache = { at, data: sections };
+    return sections;
+  })();
+
+  try {
+    return await allContentSectionsInflight;
+  } catch (error) {
+    contentBatchCooldownUntil = Date.now() + 60_000;
+    throw error;
+  } finally {
+    allContentSectionsInflight = null;
+  }
+}
+
+let productsInflight: Promise<Product[]> | null = null;
+let productsCache: { at: number; data: Product[] } | null = null;
+const PRODUCTS_CACHE_MS = 30_000;
+
+const publicSettingsCache = new Map<string, { at: number; data: unknown }>();
+const publicSettingsInflight = new Map<string, Promise<unknown>>();
+let publicSettingsCooldownUntil = 0;
+const PUBLIC_SETTINGS_CACHE_MS = 120_000;
+const PUBLIC_SETTINGS_COOLDOWN_MS = 120_000;
+
+async function getCachedPublicSettings<T>(key: string, loader: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  if (now < publicSettingsCooldownUntil) {
+    const cached = publicSettingsCache.get(key);
+    if (cached) return cached.data as T;
+    throw new Error('Settings API cooling down after recent failures');
+  }
+
+  const cached = publicSettingsCache.get(key);
+  if (cached && now - cached.at < PUBLIC_SETTINGS_CACHE_MS) {
+    return cached.data as T;
+  }
+
+  const inflight = publicSettingsInflight.get(key);
+  if (inflight) return inflight as Promise<T>;
+
+  const promise = loader()
+    .then((data) => {
+      publicSettingsCache.set(key, { at: Date.now(), data });
+      return data;
+    })
+    .catch((error) => {
+      publicSettingsCooldownUntil = Date.now() + PUBLIC_SETTINGS_COOLDOWN_MS;
+      throw error;
+    })
+    .finally(() => {
+      publicSettingsInflight.delete(key);
+    });
+
+  publicSettingsInflight.set(key, promise);
+  return promise;
+}
+
+export function invalidateProductsCache() {
+  productsCache = null;
+  productsInflight = null;
 }
 
 /** Normalize API product rows (DB shape) to frontend Product shape. */
@@ -227,8 +361,26 @@ class ApiClient {
 
   // Products
   async getProducts(): Promise<Product[]> {
-    const data = await this.request<unknown[]>('/products');
-    return Array.isArray(data) ? normalizeProducts(data) : [];
+    const now = Date.now();
+    if (productsCache && now - productsCache.at < PRODUCTS_CACHE_MS) {
+      return productsCache.data;
+    }
+    if (productsInflight) {
+      return productsInflight;
+    }
+
+    productsInflight = (async () => {
+      const data = await this.request<unknown[]>('/products');
+      const normalized = Array.isArray(data) ? normalizeProducts(data) : [];
+      productsCache = { at: Date.now(), data: normalized };
+      return normalized;
+    })();
+
+    try {
+      return await productsInflight;
+    } finally {
+      productsInflight = null;
+    }
   }
 
   async getFeaturedProducts(): Promise<Product[]> {
@@ -269,12 +421,35 @@ class ApiClient {
     });
   }
 
-  // Content
+  // Content — one batched /content request for the whole page (no per-section retry storm).
   async getContentSection(sectionKey: string): Promise<ContentSection> {
-    const url = `${API_BASE_URL}/content/${encodeURIComponent(sectionKey)}?t=${Date.now()}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    return await res.json();
+    const key = sectionKey.trim();
+    const now = Date.now();
+    const cached = contentSectionCache.get(key);
+    if (cached && now - cached.at < CONTENT_SECTION_CACHE_MS) {
+      return cached.data;
+    }
+
+    const inflight = contentSectionInflight.get(key);
+    if (inflight) {
+      return inflight;
+    }
+
+    const promise = (async () => {
+      const all = await loadAllContentSections();
+      if (all[key]) {
+        return all[key];
+      }
+      // Legacy backend without batch route: one single-section request only.
+      return fetchSingleContentSection(key);
+    })();
+
+    contentSectionInflight.set(key, promise);
+    try {
+      return await promise;
+    } finally {
+      contentSectionInflight.delete(key);
+    }
   }
 
   // Health check
@@ -282,27 +457,31 @@ class ApiClient {
     return this.request<{ status: string; timestamp: string }>('/health');
   }
 
-  // Chatbot
+  // Chatbot / site settings — cache + cooldown so a down API is not hammered on every focus/poll.
   async getSiteSettings(): Promise<{ languageToggleEnabled: boolean }> {
-    const url = `${API_BASE_URL}/site/settings?t=${Date.now()}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const data = await res.json();
-    return {
-      languageToggleEnabled:
-        data.languageToggleEnabled === true || data.languageToggleEnabled === 1,
-    };
+    return getCachedPublicSettings('site', async () => {
+      const url = `${API_BASE_URL}/site/settings`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      return {
+        languageToggleEnabled:
+          data.languageToggleEnabled === true || data.languageToggleEnabled === 1,
+      };
+    });
   }
 
   async getChatbotSettings(): Promise<{ enabled: boolean; welcomeMessage: string | null }> {
-    const url = `${API_BASE_URL}/chatbot/settings?t=${Date.now()}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const data = await res.json();
-    return {
-      enabled: data.enabled === true || data.enabled === 1,
-      welcomeMessage: data.welcomeMessage ?? null,
-    };
+    return getCachedPublicSettings('chatbot', async () => {
+      const url = `${API_BASE_URL}/chatbot/settings`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      return {
+        enabled: data.enabled === true || data.enabled === 1,
+        welcomeMessage: data.welcomeMessage ?? null,
+      };
+    });
   }
 
   async sendChatMessage(

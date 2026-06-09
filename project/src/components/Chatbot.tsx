@@ -64,9 +64,9 @@ export default function Chatbot() {
     return () => window.removeEventListener('focus', onFocus);
   }, []);
 
-  // Poll settings so toggle Off in admin hides the chatbot without refresh (30s to avoid rate limit)
+  // Poll infrequently; avoids hammering the API proxy when the backend is slow.
   useEffect(() => {
-    const interval = setInterval(fetchSettings, 30000);
+    const interval = setInterval(fetchSettings, 120_000);
     return () => clearInterval(interval);
   }, []);
 

@@ -11,6 +11,11 @@ const FOOTER_HEADING =
 const FOOTER_LINK =
   'inline-block text-xs font-medium text-white/85 transition-colors duration-200 hover:text-[#FBBF24] sm:text-sm';
 
+const contactFallback = {
+  email_primary: MAIN_CONTACT_EMAIL,
+  phone: '+91 7020631149',
+};
+
 function FooterColumn({
   title,
   children,
@@ -33,10 +38,6 @@ function FooterColumn({
 export default function Footer() {
   const { t } = useI18n();
   const currentYear = new Date().getFullYear();
-  const contactFallback = {
-    email_primary: MAIN_CONTACT_EMAIL,
-    phone: '+91 7020631149',
-  };
   const { content: contactInfo } = useLocalizedSectionContent('contact', contactFallback);
   const email = String(contactInfo.email_primary || contactFallback.email_primary);
   const phone = String(contactInfo.phone || contactFallback.phone);
