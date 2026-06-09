@@ -13,33 +13,20 @@ export default function Header() {
   const { t, isGermanDomain } = useI18n();
   const isHomePage = location.pathname === '/';
   const [showLanguageToggle, setShowLanguageToggle] = useState(false);
-  const canShowLanguageToggle =
-    showLanguageToggle || isGermanDomain || import.meta.env.DEV;
+  const languageToggleVisible = showLanguageToggle || isGermanDomain;
 
-  useEffect(() => {
-    const cacheKey = 'cu_site_settings_v1';
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached) as { languageToggleEnabled?: boolean; at?: number };
-        if (parsed.at && Date.now() - parsed.at < 5 * 60 * 1000) {
-          setShowLanguageToggle(!!parsed.languageToggleEnabled);
-          return;
-        }
-      } catch {
-        /* ignore */
-      }
-    }
+  const loadSiteSettings = () => {
     apiClient
       .getSiteSettings()
-      .then((s) => {
-        setShowLanguageToggle(s.languageToggleEnabled);
-        sessionStorage.setItem(
-          cacheKey,
-          JSON.stringify({ languageToggleEnabled: s.languageToggleEnabled, at: Date.now() })
-        );
-      })
+      .then((s) => setShowLanguageToggle(s.languageToggleEnabled))
       .catch(() => setShowLanguageToggle(false));
+  };
+
+  useEffect(() => {
+    loadSiteSettings();
+    const onFocus = () => loadSiteSettings();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   const navLinks = [
@@ -154,24 +141,21 @@ export default function Header() {
               <ShoppingBag size={18} aria-hidden />
               <span>{t('nav.getQuote')}</span>
             </button>
-            {canShowLanguageToggle ? <LanguageToggle /> : null}
+            {languageToggleVisible ? <LanguageToggle /> : null}
           </nav>
 
-          {canShowLanguageToggle ? (
-            <div className="lg:hidden flex items-center shrink-0 mr-1">
-              <LanguageToggle />
-            </div>
-          ) : null}
-
-          <button
-            type="button"
-            className="lg:hidden p-2 rounded-lg hover:bg-[var(--beige-100)] transition-colors duration-200"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={isMenuOpen}
-          >
-            {isMenuOpen ? <X size={24} style={{ color: 'var(--text-color)' }} aria-hidden /> : <Menu size={24} style={{ color: 'var(--text-color)' }} aria-hidden />}
-          </button>
+          <div className="lg:hidden flex items-center gap-2 shrink-0">
+            {languageToggleVisible ? <LanguageToggle className="shadow-sm" /> : null}
+            <button
+              type="button"
+              className="p-2 rounded-lg hover:bg-[var(--beige-100)] transition-colors duration-200"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMenuOpen}
+            >
+              {isMenuOpen ? <X size={24} style={{ color: 'var(--text-color)' }} aria-hidden /> : <Menu size={24} style={{ color: 'var(--text-color)' }} aria-hidden />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -196,11 +180,6 @@ export default function Header() {
               <ShoppingBag size={18} />
               <span>{t('nav.getQuote')}</span>
             </button>
-            {canShowLanguageToggle ? (
-              <div className="flex justify-center pt-4 pb-1">
-                <LanguageToggle />
-              </div>
-            ) : null}
           </nav>
         </div>
       )}

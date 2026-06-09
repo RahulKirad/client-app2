@@ -6,7 +6,7 @@ type Currency = 'EUR' | 'USD' | 'INR';
 
 type I18nContextValue = {
   locale: Locale;
-  /** German on cottonunique.de regardless of manual locale toggle. */
+  /** Locale used for copy (matches user toggle; defaults to DE on cottonunique.de). */
   effectiveLocale: Locale;
   isGermanDomain: boolean;
   setLocale: (l: Locale) => void;
@@ -19,10 +19,10 @@ type I18nContextValue = {
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 function detectInitialLocale(): Locale {
-  const host = typeof window !== 'undefined' ? window.location.hostname : '';
-  if (host.endsWith('.de')) return 'de';
   const stored = typeof window !== 'undefined' ? localStorage.getItem('cu_locale') : null;
-  return stored === 'de' ? 'de' : 'en';
+  if (stored === 'en' || stored === 'de') return stored;
+  if (isGermanHostname()) return 'de';
+  return 'en';
 }
 
 function detectInitialCurrency(locale: Locale): Currency {
@@ -47,7 +47,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   };
 
   const isGermanDomain = isGermanHostname();
-  const effectiveLocale: Locale = isGermanDomain ? 'de' : locale;
+  const effectiveLocale: Locale = locale;
 
   const t = (key: string) =>
     messages[effectiveLocale][key] || messages.en[key] || key;

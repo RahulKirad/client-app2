@@ -4,7 +4,6 @@ import { randomUUID } from 'crypto';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
 import path from 'path';
-import rateLimit from 'express-rate-limit';
 import adminRoutes from './routes/admin';
 import chatbotRoutes from './routes/chatbot';
 import { sendInquiryEmail, sendSampleRequestEmail } from './services/email';
@@ -57,7 +56,7 @@ function applyCanonicalContactPhones(content: unknown): unknown {
   return next;
 }
 
-// Trust reverse proxy for rate limiter (Hostinger proxy/Cloudflare)
+// Trust reverse proxy (Hostinger / Cloudflare)
 app.set('trust proxy', 1);
 
 const defaultAllowedOrigins = [
@@ -134,60 +133,6 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json());
-
-/** Path after /api — works whether Express gives mounted or full path. */
-function apiRequestPath(req: Request): string {
-  const raw = (req.originalUrl || req.url || req.path || '').split('?')[0];
-  const idx = raw.indexOf('/api');
-  const afterApi = idx >= 0 ? raw.slice(idx + 4) : raw;
-  return afterApi.startsWith('/') ? afterApi : `/${afterApi}`;
-}
-
-function isPublicCatalogGet(req: Request): boolean {
-  if (req.method !== 'GET') return false;
-  const p = apiRequestPath(req);
-  return (
-    p.startsWith('/content/') ||
-    p === '/site/settings' ||
-    p === '/chatbot/settings' ||
-    p === '/products' ||
-    p.startsWith('/products/') ||
-    p === '/health' ||
-    p === '/health/db'
-  );
-}
-
-const rateLimitWindowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10);
-const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX || '500', 10);
-
-// Rate limit writes + admin traffic; do not throttle public catalog GET (homepage loads many sections at once).
-const limiter = rateLimit({
-  windowMs: rateLimitWindowMs,
-  max: rateLimitMax,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    if (req.method === 'OPTIONS') return true;
-    if (req.method !== 'GET') return false;
-    const pathOnly = req.originalUrl.split('?')[0];
-    // Public content reads are cached client-side but can burst on page load (many sections).
-    if (pathOnly.includes('/content/')) return true;
-    if (pathOnly.endsWith('/chatbot/settings')) return true;
-    if (pathOnly.endsWith('/site/settings')) return true;
-    if (pathOnly === '/api/products' || pathOnly.startsWith('/api/products/')) return true;
-    return false;
-  },
-  handler: (req, res, _next, options) => {
-    const origin = req.headers.origin;
-    if (origin && isAllowedCorsOrigin(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Vary', 'Origin');
-    }
-    res.status(options.statusCode).json(options.message);
-  },
-});
-app.use('/api', limiter);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
