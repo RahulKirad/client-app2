@@ -13,6 +13,7 @@ exports.getSmtpSettingsForAdmin = getSmtpSettingsForAdmin;
 exports.saveSmtpSettings = saveSmtpSettings;
 const promise_1 = __importDefault(require("mysql2/promise"));
 const crypto_1 = __importDefault(require("crypto"));
+const email_1 = require("../constants/email");
 const TABLE = 'smtp_settings';
 function getDbConfig() {
     const dbConfig = {
@@ -90,7 +91,18 @@ async function ensureSmtpSettingsTable(mysqlPool = getSmtpSettingsPool()) {
   `);
     const [rows] = await mysqlPool.execute(`SELECT COUNT(*) as c FROM ${TABLE}`);
     if (Array.isArray(rows) && rows[0].c === 0) {
-        await mysqlPool.execute(`INSERT INTO ${TABLE} (id, email_user) VALUES (1, '')`);
+        await mysqlPool.execute(`INSERT INTO ${TABLE} (id, email_user) VALUES (1, ?)`, [email_1.MAIN_EMAIL]);
+    }
+    else {
+        await mysqlPool.execute(`UPDATE ${TABLE}
+       SET email_user = ?
+       WHERE id = 1
+         AND (email_user = '' OR LOWER(email_user) IN (?, ?, ?))`, [
+            email_1.MAIN_EMAIL,
+            'abhishek.deolalikar@gmail.com',
+            'cottonunique.co@gmail.com',
+            'info@cottonunique.com',
+        ]);
     }
 }
 async function getResolvedSmtpCredentials() {

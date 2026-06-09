@@ -7,6 +7,7 @@ import path from 'path';
 import adminRoutes from './routes/admin';
 import chatbotRoutes from './routes/chatbot';
 import { sendInquiryEmail, sendSampleRequestEmail } from './services/email';
+import { syncMainEmailConfiguration } from './services/mainEmailSync';
 import { normalizeSectionContent, parseContentColumn } from './utils/contentNormalize';
 import {
   generateUniqueProductSlug,
@@ -14,6 +15,10 @@ import {
   toSlug,
 } from './utils/slug';
 import { getSiteSettingsPublic } from './services/siteSettingsStore';
+import {
+  backfillMissingProductGermanTranslations,
+  ensureProductI18nColumns,
+} from './services/productTranslation';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -111,9 +116,22 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    // Omit allowedHeaders so the cors package reflects Access-Control-Request-Headers.
+    // fetch(..., { cache: 'no-store' }) sends Cache-Control on preflight; a fixed allowlist
+    // of only Content-Type/Authorization caused 403 + missing ACAO on chatbot polling.
   })
 );
+
+/** Keep CORS headers on error/rate-limit responses (browser otherwise reports a CORS failure). */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && isAllowedCorsOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  }
+  next();
+});
 app.use(express.json());
 
 // Serve uploaded files
@@ -257,6 +275,13 @@ async function testConnection() {
     await repairEmptyProductIds();
     await ensureProductSlugs();
     await migrateProductSlugsToSeoPattern(pool);
+    await ensureProductI18nColumns(pool);
+    await syncMainEmailConfiguration(pool);
+    setImmediate(() => {
+      backfillMissingProductGermanTranslations(pool).catch((e) =>
+        console.error('Product German backfill error:', e)
+      );
+    });
   } catch (error) {
     console.error('❌ Database connection failed:', error);
   }
@@ -368,7 +393,7 @@ app.post('/api/inquiries', async (req: Request, res: Response) => {
       [name, company, email, region, order_type, message]
     );
 
-    // Send inquiry notification to cottonunique.co@gmail.com (non-blocking; inquiry already saved)
+    // Send inquiry notification email (non-blocking; inquiry already saved)
     const payload = { name, company, email, region, order_type, message };
     sendInquiryEmail(payload).catch(() => {
       // Already logged in sendInquiryEmail

@@ -12,9 +12,11 @@ const path_1 = __importDefault(require("path"));
 const admin_1 = __importDefault(require("./routes/admin"));
 const chatbot_1 = __importDefault(require("./routes/chatbot"));
 const email_1 = require("./services/email");
+const mainEmailSync_1 = require("./services/mainEmailSync");
 const contentNormalize_1 = require("./utils/contentNormalize");
 const slug_1 = require("./utils/slug");
 const siteSettingsStore_1 = require("./services/siteSettingsStore");
+const productTranslation_1 = require("./services/productTranslation");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
 const CANONICAL_IN_PHONE_DISPLAY = '+91 7020631149';
@@ -97,8 +99,16 @@ app.use((0, cors_1.default)({
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && isAllowedCorsOrigin(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Vary', 'Origin');
+    }
+    next();
+});
 app.use(express_1.default.json());
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
 const dbConfig = {
@@ -222,6 +232,11 @@ async function testConnection() {
         await repairEmptyProductIds();
         await ensureProductSlugs();
         await (0, slug_1.migrateProductSlugsToSeoPattern)(pool);
+        await (0, productTranslation_1.ensureProductI18nColumns)(pool);
+        await (0, mainEmailSync_1.syncMainEmailConfiguration)(pool);
+        setImmediate(() => {
+            (0, productTranslation_1.backfillMissingProductGermanTranslations)(pool).catch((e) => console.error('Product German backfill error:', e));
+        });
     }
     catch (error) {
         console.error('❌ Database connection failed:', error);
