@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Save, Loader2, Stethoscope } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL, getAdminApiBaseUrl } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface ChatbotSettings {
@@ -56,7 +57,6 @@ export default function ChatbotControl() {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [modelsLoading, setModelsLoading] = useState(false);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
   const authHeaders = () => {
     const t = token ?? (typeof localStorage !== 'undefined' ? localStorage.getItem('admin_token') : null);
     return t ? { Authorization: `Bearer ${t}` } : {};
@@ -86,7 +86,7 @@ export default function ChatbotControl() {
 
   const fetchSettings = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/chatbot-settings`, { headers: authHeaders() });
+      const response = await axios.get(`${getAdminApiBaseUrl()}/admin/chatbot-settings`, { headers: authHeaders() });
       const data = response.data;
       setSettings({
         isEnabled: data.isEnabled === true || data.isEnabled === 1,
@@ -107,7 +107,7 @@ export default function ChatbotControl() {
     setSaving(true);
     setSaveMessage(null);
     try {
-      const res = await axios.put(`${API_BASE_URL}/admin/chatbot-settings`, {
+      const res = await axios.put(`${getAdminApiBaseUrl()}/admin/chatbot-settings`, {
         isEnabled: settings.isEnabled,
         customInstructions: settings.customInstructions || '',
         disallowedTopics: settings.disallowedTopics || '',

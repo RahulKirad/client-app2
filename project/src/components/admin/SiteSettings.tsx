@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Globe, Save } from 'lucide-react';
-import { API_BASE_URL } from '../../lib/api';
+import { getAdminApiBaseUrl } from '../../lib/api';
 
 function authHeaders() {
   const token = localStorage.getItem('token');
@@ -16,7 +16,7 @@ export default function SiteSettings() {
 
   const fetchSettings = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/admin/site-settings`, {
+      const res = await axios.get(`${getAdminApiBaseUrl()}/admin/site-settings`, {
         headers: authHeaders(),
       });
       setLanguageToggleEnabled(res.data.languageToggleEnabled === true);
@@ -36,7 +36,7 @@ export default function SiteSettings() {
     setMessage(null);
     try {
       const res = await axios.put(
-        `${API_BASE_URL}/admin/site-settings`,
+        `${getAdminApiBaseUrl()}/admin/site-settings`,
         { languageToggleEnabled },
         { headers: authHeaders() }
       );

@@ -22,7 +22,7 @@ const email_2 = require("../constants/email");
 const mainEmailSync_1 = require("../services/mainEmailSync");
 const router = express_1.default.Router();
 const MAX_PRODUCT_IMAGES = 10;
-const DEFAULT_ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME || email_2.MAIN_EMAIL;
+const DEFAULT_ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME || 'abhishek.deolalikar@gmail.com';
 const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'admin@Cottonunique2026';
 const uploadsDir = path_1.default.join(__dirname, '../../uploads');
 if (!fs_1.default.existsSync(uploadsDir)) {

@@ -99,6 +99,15 @@ function isAllowedCorsOrigin(origin: string): boolean {
   }
 }
 
+function applyCorsHeaders(req: Request, res: Response): void {
+  const origin = req.headers.origin;
+  if (origin && isAllowedCorsOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  }
+}
+
 // Middleware — reflect the request Origin when allowed (required for credentialed cross-origin)
 app.use(
   cors({
@@ -122,14 +131,17 @@ app.use(
   })
 );
 
+/** Explicit preflight for all /api routes (admin direct hits, legacy cross-origin clients). */
+app.options('/api/*', (req, res) => {
+  applyCorsHeaders(req, res);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.sendStatus(204);
+});
+
 /** Keep CORS headers on error/rate-limit responses (browser otherwise reports a CORS failure). */
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && isAllowedCorsOrigin(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Vary', 'Origin');
-  }
+  applyCorsHeaders(req, res);
   next();
 });
 app.use(express.json());

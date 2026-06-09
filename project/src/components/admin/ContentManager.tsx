@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ExternalLink, Edit2, Check, X, Eye, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
-import { resolveMediaUrl, API_BASE_URL, notifyContentUpdated } from '../../lib/api';
+import { resolveMediaUrl, getAdminApiBaseUrl, notifyContentUpdated } from '../../lib/api';
 import { mergeEcototeContent } from '../../data/ecototeDuopackDefaults';
 
 interface ContentSection {
@@ -137,7 +137,7 @@ export default function ContentManager() {
 
   const fetchContent = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/admin/content`, { headers: authHeaders() });
+      const res = await axios.get(`${getAdminApiBaseUrl()}/admin/content`, { headers: authHeaders() });
       const normalized = (res.data as ContentSection[]).map((s) => ({ ...s, content: normalizeSectionContent(s.content) }));
       setSections(normalized);
       const hero = normalized.find((s) => s.section_key === 'hero');
@@ -176,7 +176,7 @@ export default function ContentManager() {
             : {};
         payload = { ...editData, content: { ...base, slides: slideDraft } };
       }
-      await axios.put(`${API_BASE_URL}/admin/content/${sectionId}`, payload, { headers: authHeaders() });
+      await axios.put(`${getAdminApiBaseUrl()}/admin/content/${sectionId}`, payload, { headers: authHeaders() });
       showToast('✓ Section saved successfully');
       await fetchContent();
       notifyContentUpdated(section?.section_key);
@@ -202,7 +202,7 @@ export default function ContentManager() {
     setSavingSlides(true);
     try {
       await axios.put(
-        `${API_BASE_URL}/admin/content/${hero.id}`,
+        `${getAdminApiBaseUrl()}/admin/content/${hero.id}`,
         { title: hero.title, content: nextContent, is_active: hero.is_active ?? true },
         { headers: authHeaders() }
       );
@@ -221,8 +221,8 @@ export default function ContentManager() {
     const fd = new FormData();
     fd.append('image', file);
     const t = token ?? localStorage.getItem('admin_token');
-    const res = await axios.post(`${API_BASE_URL}/admin/content/upload-image`, fd, {
-      headers: { ...(t ? { Authorization: `Bearer ${t}` } : {}), 'Content-Type': 'multipart/form-data' },
+    const res = await axios.post(`${getAdminApiBaseUrl()}/admin/content/upload-image`, fd, {
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
     });
     return res.data.url as string;
   };

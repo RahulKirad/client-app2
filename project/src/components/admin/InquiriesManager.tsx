@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
-import { API_BASE_URL } from '../../lib/api';
+import { getAdminApiBaseUrl } from '../../lib/api';
 
 interface Inquiry {
   id: string;
@@ -80,7 +80,7 @@ export default function InquiriesManager() {
   const fetchInquiries = async () => {
     setListMessage(null);
     try {
-      const response = await axios.get<Inquiry[]>(`${API_BASE_URL}/admin/inquiries`, { headers: authHeaders() });
+      const response = await axios.get<Inquiry[]>(`${getAdminApiBaseUrl()}/admin/inquiries`, { headers: authHeaders() });
       setInquiries(response.data);
     } catch (error) {
       console.error('Error fetching inquiries:', error);
@@ -91,7 +91,7 @@ export default function InquiriesManager() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      await axios.put(`${API_BASE_URL}/admin/inquiries/${id}`, { status }, { headers: authHeaders() });
+      await axios.put(`${getAdminApiBaseUrl()}/admin/inquiries/${id}`, { status }, { headers: authHeaders() });
       await fetchInquiries();
       if (selectedInquiry?.id === id) {
         setSelectedInquiry((cur) => (cur ? { ...cur, status } : null));
@@ -109,7 +109,7 @@ export default function InquiriesManager() {
     setListMessage(null);
     try {
       await axios.post(
-        `${API_BASE_URL}/admin/inquiries/${encodeURIComponent(id)}/delete`,
+        `${getAdminApiBaseUrl()}/admin/inquiries/${encodeURIComponent(id)}/delete`,
         {},
         { headers: authHeaders() }
       );

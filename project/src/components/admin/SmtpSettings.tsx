@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Save, Loader2, Send } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
-import { API_BASE_URL } from '../../lib/api';
+import { getAdminApiBaseUrl } from '../../lib/api';
 
 interface SmtpView {
   emailUser: string;
@@ -33,7 +33,7 @@ export default function SmtpSettings() {
 
   const fetchSettings = async () => {
     try {
-      const res = await axios.get<SmtpView>(`${API_BASE_URL}/admin/smtp-settings`, { headers: authHeaders() });
+      const res = await axios.get<SmtpView>(`${getAdminApiBaseUrl()}/admin/smtp-settings`, { headers: authHeaders() });
       setView(res.data);
       setEmailUser(res.data.emailUser || '');
     } catch (e) {
@@ -66,7 +66,7 @@ export default function SmtpSettings() {
         body.appPassword = appPassword.trim();
       }
       const res = await axios.put<SmtpView & { message?: string }>(
-        `${API_BASE_URL}/admin/smtp-settings`,
+        `${getAdminApiBaseUrl()}/admin/smtp-settings`,
         body,
         { headers: { ...authHeaders(), 'Content-Type': 'application/json' } }
       );
@@ -105,7 +105,7 @@ export default function SmtpSettings() {
     setTesting(true);
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/admin/smtp-settings/test`,
+        `${getAdminApiBaseUrl()}/admin/smtp-settings/test`,
         { to },
         { headers: { ...authHeaders(), 'Content-Type': 'application/json' } }
       );

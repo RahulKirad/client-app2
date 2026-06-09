@@ -13,6 +13,7 @@ import {
   Activity,
 } from 'lucide-react';
 import axios from 'axios';
+import { getAdminApiBaseUrl } from '../../lib/api';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -86,7 +87,6 @@ export default function Dashboard() {
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
   const authHeaders = () => {
     const t = token ?? (typeof localStorage !== 'undefined' ? localStorage.getItem('admin_token') : null);
     return t ? { Authorization: `Bearer ${t}` } : {};
@@ -102,9 +102,9 @@ export default function Dashboard() {
     setError(null);
     try {
       const [productsRes, inquiriesRes, contentRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/admin/products`, { headers: authHeaders() }),
-        axios.get(`${API_BASE_URL}/admin/inquiries`, { headers: authHeaders() }),
-        axios.get(`${API_BASE_URL}/admin/content`, { headers: authHeaders() }),
+        axios.get(`${getAdminApiBaseUrl()}/admin/products`, { headers: authHeaders() }),
+        axios.get(`${getAdminApiBaseUrl()}/admin/inquiries`, { headers: authHeaders() }),
+        axios.get(`${getAdminApiBaseUrl()}/admin/content`, { headers: authHeaders() }),
       ]);
 
       const productsList = (productsRes.data || []) as Product[];

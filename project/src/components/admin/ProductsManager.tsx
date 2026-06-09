@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit, Trash2, Image, Star, Eye, ExternalLink, X, FolderPlus, ChevronDown, ChevronUp, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
-import { normalizeProducts, resolveMediaUrl } from '../../lib/api';
+import { getAdminApiBaseUrl, normalizeProducts, resolveMediaUrl } from '../../lib/api';
 import { htmlToPlainText, isQuillDescriptionEmpty } from '../../lib/productDescriptionHtml';
 import ProductRichTextEditor from './ProductRichTextEditor';
 
@@ -165,7 +165,6 @@ export default function ProductsManager() {
   const [filterFeatured, setFilterFeatured] = useState<'all' | 'featured' | 'not'>('all');
   const [page, setPage] = useState(1);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
   // Use context token or localStorage so the first request (before context hydrates) still sends auth
   const authHeaders = () => {
     const t = token ?? (typeof localStorage !== 'undefined' ? localStorage.getItem('admin_token') : null);
@@ -193,7 +192,7 @@ export default function ProductsManager() {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/products`, { headers: authHeaders() });
+      const response = await axios.get(`${getAdminApiBaseUrl()}/admin/products`, { headers: authHeaders() });
       setProducts(normalizeProducts(response.data));
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -249,12 +248,12 @@ export default function ProductsManager() {
 
     try {
       if (editingProduct) {
-        await axios.put(`${API_BASE_URL}/admin/products/${editingProduct.id}`, submitData, {
-          headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' }
+        await axios.put(`${getAdminApiBaseUrl()}/admin/products/${editingProduct.id}`, submitData, {
+          headers: authHeaders(),
         });
       } else {
-        await axios.post(`${API_BASE_URL}/admin/products`, submitData, {
-          headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' }
+        await axios.post(`${getAdminApiBaseUrl()}/admin/products`, submitData, {
+          headers: authHeaders(),
         });
       }
       fetchProducts();
@@ -325,7 +324,7 @@ export default function ProductsManager() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
       try {
-        await axios.delete(`${API_BASE_URL}/admin/products/${id}`, { headers: authHeaders() });
+        await axios.delete(`${getAdminApiBaseUrl()}/admin/products/${id}`, { headers: authHeaders() });
         fetchProducts();
       } catch (error) {
         console.error('Error deleting product:', error);
