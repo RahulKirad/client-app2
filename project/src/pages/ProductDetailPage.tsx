@@ -506,21 +506,24 @@ export default function ProductDetailPage() {
               </h2>
               <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {displayRelated.map((related) => (
-                  <li key={related.id}>
+                  <li key={related.id} className="h-full">
                     <Link
                       to={productPath(related)}
-                      className="group block rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                      className="group flex h-full flex-col rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
                     >
                       <img
                         src={resolveMediaUrl(related.image_url)}
                         alt={related.name}
-                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="h-40 w-full shrink-0 object-cover transition-transform duration-300 group-hover:scale-105"
                         width={IMG.product.width}
                         height={IMG.product.height}
                         loading="lazy"
                       />
-                      <div className="p-4">
-                        <h3 className="font-semibold text-slate-900 line-clamp-2" style={{ fontFamily: 'var(--heading-font)' }}>
+                      <div className="flex flex-1 flex-col p-4">
+                        <h3
+                          className="line-clamp-2 min-h-[3rem] font-semibold text-slate-900"
+                          style={{ fontFamily: 'var(--heading-font)' }}
+                        >
                           {related.name}
                         </h3>
                         <p className="text-sm mt-1" style={{ color: 'var(--beige-700)' }}>
