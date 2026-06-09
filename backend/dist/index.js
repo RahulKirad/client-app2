@@ -84,6 +84,14 @@ function isAllowedCorsOrigin(origin) {
         return false;
     }
 }
+function applyCorsHeaders(req, res) {
+    const origin = req.headers.origin;
+    if (origin && isAllowedCorsOrigin(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Vary', 'Origin');
+    }
+}
 app.use((0, cors_1.default)({
     origin(origin, callback) {
         if (!origin) {
@@ -100,13 +108,14 @@ app.use((0, cors_1.default)({
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
+app.options('/api/*', (req, res) => {
+    applyCorsHeaders(req, res);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    res.sendStatus(204);
+});
 app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (origin && isAllowedCorsOrigin(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        res.setHeader('Vary', 'Origin');
-    }
+    applyCorsHeaders(req, res);
     next();
 });
 app.use(express_1.default.json());

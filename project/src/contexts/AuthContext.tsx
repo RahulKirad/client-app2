@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { getAdminApiBaseUrl } from '../lib/api';
 
 interface User {
   id: string;
@@ -29,8 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-
   useEffect(() => {
     const storedToken = localStorage.getItem('admin_token');
     const storedUser = localStorage.getItem('admin_user');
@@ -47,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const reqInterceptor = axios.interceptors.request.use((config) => {
       const url = config.url ?? '';
-      if (url.includes('/api/admin') || url.includes('/admin/')) {
+      if (url.includes('/api/admin') || url.includes('app.cottonunique.com/api/admin')) {
         const t = token ?? localStorage.getItem('admin_token');
         if (t) config.headers.Authorization = `Bearer ${t}`;
       }
@@ -63,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (err) => {
         const status = err.response?.status;
         const url = err.config?.url ?? '';
-        const isAdminApi = url.includes('/api/admin') || url.includes('/admin/');
+        const isAdminApi = url.includes('/api/admin') || url.includes('app.cottonunique.com/api/admin');
         const isLogin = url.includes('/admin/login');
         if ((status === 401 || status === 403) && isAdminApi && !isLogin) {
           setToken(null);
@@ -80,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/login`, {
+      const response = await axios.post(`${getAdminApiBaseUrl()}/admin/login`, {
         username,
         password
       });
@@ -97,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     } catch (error: any) {
       if (error.code === 'ERR_NETWORK' || !error.response) {
-        throw new Error('Cannot reach server. Is the backend running at ' + API_BASE_URL + '?');
+        throw new Error('Cannot reach server. Is the backend running at ' + getAdminApiBaseUrl() + '?');
       }
       const msg = error.response?.data?.error || error.response?.data?.message || 'Login failed';
       throw new Error(msg);

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Mail, Building2, MapPin, Clock, Trash2, Inbox, Filter, X } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
-import { API_BASE_URL, resolveMediaUrl, type SampleRequestRow } from '../../lib/api';
+import { getAdminApiBaseUrl, resolveMediaUrl, type SampleRequestRow } from '../../lib/api';
 import { htmlToPlainText, sanitizeProductDescriptionHtml } from '../../lib/productDescriptionHtml';
 
 const STATUS_ORDER = ['new', 'contacted', 'completed'] as const;
@@ -95,7 +95,7 @@ export default function RequestedSamplesManager() {
   const fetchRows = async () => {
     setListMessage(null);
     try {
-      const res = await axios.get<SampleRequestRow[]>(`${API_BASE_URL}/admin/sample-requests`, { headers: authHeaders() });
+      const res = await axios.get<SampleRequestRow[]>(`${getAdminApiBaseUrl()}/admin/sample-requests`, { headers: authHeaders() });
       setRows(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       console.error(e);
@@ -129,7 +129,7 @@ export default function RequestedSamplesManager() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      await axios.put(`${API_BASE_URL}/admin/sample-requests/${encodeURIComponent(id)}`, { status }, { headers: authHeaders() });
+      await axios.put(`${getAdminApiBaseUrl()}/admin/sample-requests/${encodeURIComponent(id)}`, { status }, { headers: authHeaders() });
       await fetchRows();
       setModalRequest((cur) => (cur && cur.id === id ? { ...cur, status } : cur));
     } catch (e) {
@@ -143,7 +143,7 @@ export default function RequestedSamplesManager() {
     setListMessage(null);
     try {
       await axios.post(
-        `${API_BASE_URL}/admin/sample-requests/${encodeURIComponent(id)}/delete`,
+        `${getAdminApiBaseUrl()}/admin/sample-requests/${encodeURIComponent(id)}/delete`,
         {},
         { headers: authHeaders() }
       );

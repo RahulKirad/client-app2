@@ -1,15 +1,52 @@
 // API client for MySQL backend
 
+/** Public storefront hosts use same-origin /api (proxied in .htaccess) to avoid CORS/CDN issues. */
+function isPublicCottonSiteHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^www\./, '');
+  if (host === 'app.cottonunique.com') return false;
+  return (
+    host === 'cottonunique.com' ||
+    host.endsWith('.cottonunique.com') ||
+    host === 'cottonunique.de' ||
+    host.endsWith('.cottonunique.de')
+  );
+}
+
 /** Ensures the base ends with /api (e.g. if VITE_API_URL is only http://localhost:3001). */
 function normalizeViteApiBaseUrl(): string {
   const raw = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api').trim().replace(/\/$/, '');
+  if (/^\/api$/i.test(raw)) return '/api';
   if (/\/api$/i.test(raw)) return raw;
   return `${raw}/api`;
 }
 
-export const API_BASE_URL = normalizeViteApiBaseUrl();
-const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
-// const API_BASE_URL = 'https://app.cottonunique.com/api';
+function resolveApiBaseUrl(): string {
+  if (typeof window !== 'undefined' && isPublicCottonSiteHost(window.location.hostname)) {
+    return '/api';
+  }
+  return normalizeViteApiBaseUrl();
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
+
+/**
+ * Admin panel API base. On the public storefront host, talks directly to the Node app
+ * (multipart uploads cannot be reliably proxied through PHP on shared hosting).
+ */
+export function getAdminApiBaseUrl(): string {
+  if (typeof window !== 'undefined' && isPublicCottonSiteHost(window.location.hostname)) {
+    return 'https://app.cottonunique.com/api';
+  }
+  return normalizeViteApiBaseUrl();
+}
+
+/** Origin for /uploads/… paths returned by the API. */
+export function getApiOrigin(): string {
+  if (API_BASE_URL.startsWith('/')) {
+    return typeof window !== 'undefined' ? window.location.origin : 'https://cottonunique.com';
+  }
+  return API_BASE_URL.replace(/\/api\/?$/, '');
+}
 
 export interface Product {
   id: string;
@@ -98,7 +135,7 @@ export function resolveMediaUrl(url?: string | null, cacheBuster?: string | numb
   } else if (url.startsWith('/images')) {
     resolved = url;
   } else {
-    resolved = `${API_ORIGIN}${url.startsWith('/') ? url : `/${url}`}`;
+    resolved = `${getApiOrigin()}${url.startsWith('/') ? url : `/${url}`}`;
   }
   if (cacheBuster == null || cacheBuster === '') return resolved;
   const sep = resolved.includes('?') ? '&' : '?';
